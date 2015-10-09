@@ -1,0 +1,15 @@
+Online algorithm
+
+Create a new cluster (sense) for a word type with probability proportional to the distance of its context to the nearest cluster (sense).
+Try the discrete model too.
+
+
+word w ∈ W is associated with sense vectors, context clusters and a global vector vg (w), point s to be noted are as follows,
+vector representation of the context is the average of its context words’ vectors
+
+
+
+Initially, the words do not have sense vectors and context clusters. We create the first sense vector and context cluster for each word on its first occurrence in the training data.
+new context cluster and a sense vector are created online when the word is observed with a context where the similarity between the vector representation of the context with every existing cluster center of the word is less than λ,
+
+For each word, perform a simple update.. 
