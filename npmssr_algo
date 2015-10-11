@@ -1,15 +1,34 @@
 Online algorithm
 
-Create a new cluster (sense) for a word type with probability proportional to the distance of its context to the nearest cluster (sense).
-Try the discrete model too.
+Create a new cluster (sense) for a word type with probability proportional to the distance of its context to the nearest cluster (sense), try the discrete model too.
+
+word w ∈ W is associated with sense vectors, context clusters and a global vector vg (w), points to be noted are as follows,
+  	- vector representation of the context is the average of its context words’ vectors
+	- Initially, the words do not have sense vectors and context clusters. 
+	- We create the first sense vector and context cluster for each word on its first occurrence in the training data.
+
+New context cluster and a sense vector are created online when the word is observed with a context where the similarity between the vector representation of the context with every existing cluster center of the word is less than λ,
+
+For each word, perform the simple update to increase the clusters.
 
 
-word w ∈ W is associated with sense vectors, context clusters and a global vector vg (w), point s to be noted are as follows,
-vector representation of the context is the average of its context words’ vectors
 
+Pseudo Code:
 
+Hash word vectors, file input			(A)
 
-Initially, the words do not have sense vectors and context clusters. We create the first sense vector and context cluster for each word on its first occurrence in the training data.
-new context cluster and a sense vector are created online when the word is observed with a context where the similarity between the vector representation of the context with every existing cluster center of the word is less than λ,
+for every word in set:
+	Intialise cluster to 0. With null sense vectors.
 
-For each word, perform a simple update.. 
+for every word in set:
+	
+	select r_t  = context window length (Randomly or gaussian distribution)
+	Calculate context vectors 																(B)
+
+	let k be the current number of contexts associated
+	for all current clusters:
+		check the distance
+		Find the cluster with max similarity (Possible similarity measures include, glob sim, AvgSim, etc)						
+	If the distance is greater than a specified quantity then create a new cluster. (probability based creation could be a good option)
+	If we need to create a new cluster, then we initialise the cluster's center as the context vector itself
+	The sense vector "should" be the average of all the context vectors associated with the clusters 															(C)
