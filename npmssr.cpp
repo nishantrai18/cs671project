@@ -5,6 +5,7 @@
 #include <cmath>
 #include <map>
 #include <vector>
+#define MAX_STRING 100
 
 using namespace std;
 
@@ -13,7 +14,7 @@ vector<double> operator+(const vector<double>& v1, const vector<double>& v2)
     vector <double> tmp;
     for (int i=0;i<v1.size();i++)
     {
-        tmp.append(v1[i]+v2[i]);
+        tmp.push_back(v1[i]+v2[i]);
     }
     return tmp;
 }
@@ -23,7 +24,7 @@ vector<double> operator-(const vector<double>& v1, const vector<double>& v2)
     vector <double> tmp;
     for (int i=0;i<v1.size();i++)
     {
-        tmp.append(v1[i]-v2[i]);
+        tmp.push_back(v1[i]-v2[i]);
     }
     return tmp;
 }
@@ -33,12 +34,12 @@ vector<double> operator/(const vector<double>& v1, const double& num)
     vector <double> tmp;
     for (int i=0;i<v1.size();i++)
     {
-        tmp.append(v1[i]/num);
+        tmp.push_back(v1[i]/num);
     }
     return tmp;
 }
 
-unordered_map <string, vector <double> > wordvec;
+map <string, vector <double> > wordvec;
 
 struct sense{
 	int senseNumber;
@@ -52,8 +53,9 @@ struct senseList{
 	vector <sense> senses;
 	double size;
 };
+
 void ReadWord(string &word, FILE *fin) {
-  int a = 0
+  int a = 0;
   char ch;
   word = "";
   while (!feof(fin)) {
@@ -86,9 +88,23 @@ void InitNULL(vector <double>& tmp, int size)
         tmp[i]=0;
 }
 
+double similarity(vector <double> arr, vector <double> bar)
+{
+    double a=0,b=0,c=0;
+    int i=0;
+    for(i=0;i<arr.size();i++)
+    {
+        c += arr[i]*bar[i];
+        a += arr[i]*arr[i];
+        b += bar[i]*bar[i];
+    }
+    return (c/(sqrt(a)*sqrt(b)));
+}
+
 int main()
 {
     int maxWindowSize = 5, dim = 100;
+    double threshold = -0.5;
 
     /*
 
@@ -97,6 +113,39 @@ int main()
     ASSUME wordvec contains word vectors of all words
 
     */
+
+    FILE* fi = fopen("vectors.bin","r");
+
+    //Format is Number of words, Dimension 
+    //string d doubles 
+    int numWords;
+
+    int i,j,t,w=0;
+
+    cout<<"SUCCESS\n";
+
+    fscanf(fi,"%d%d",&numWords,&dim);
+
+    cout<<numWords<<dim<<endl;
+
+    for(i=0 ; i < numWords ; i++)
+    {
+        char str[110];
+        fscanf(fi,"%s",str);
+        string tmp = string(str);
+        vector <double> vec;
+        vec.resize(dim);
+        for(j=0;j<dim;j++)
+            fscanf(fi,"%lf",&vec[j]);
+        wordvec.insert(make_pair(tmp,vec));
+        if(i%10000==0)
+            cout<<i<<endl;
+
+    }
+
+    fclose(fi);
+
+    cout<<"SUCCESS\n";
 
     FILE* fo = fopen("SOMEFILE","r");
     vector < vector <string> > sent;
@@ -113,14 +162,15 @@ int main()
             break;
         if(word == "</s>")
             sent.resize(++cnt);
-        sent[cnt].append(word);
+        sent[cnt].push_back(word);
         totalWords++;
     }
+
+    fclose(fo);
 
     contvec.resize(totalWords+10);
     senseID.resize(totalWords+10);
     
-    int i,j,t,w=0;
     for(i=0;i<sent.size();i++)
     {
         for(j=0;j<sent[i].size();j++)
@@ -133,7 +183,7 @@ int main()
                     contvec[w]=contvec[w]+wordvec["</s>"];
                 else if(k>=sent[i].size())
                     contvec[w]=contvec[w]+wordvec["</s>"];
-                else if(contvec.find(sent[i][j])==contvec.end())
+                else if(wordvec.find(sent[i][j])==wordvec.end())
                     continue;
                 else if(k != j)
                     contvec[w]=contvec[w]+wordvec[sent[i][j]];
@@ -149,7 +199,7 @@ int main()
     int clt=0;
     clust.totalSenses = 0;
     (clust.senses).resize(++clt);
-    InitNULL(clust.senses[clt-1],dim);
+    InitNULL((clust.senses[clt-1]).center,dim);
 
     for(i=0;i<contvec.size();i++)
     {
