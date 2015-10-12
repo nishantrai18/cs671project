@@ -43,16 +43,16 @@ vector<double> operator/(const vector<double>& v1, const double& num)
 }
 
 struct sense{
-	int senseNumber;
-	vector <string> skipGram;
-	vector <double> center;
-	double size;
+    int senseNumber;
+    vector <string> skipGram;
+    vector <double> center;
+    double size;
 };
 
 struct senseList{
-	int totalSenses;
-	vector <sense> senses;
-	double size;
+    int totalSenses;
+    vector <sense> senses;
+    double size;
 };
 
 map <string, vector <double> > wordvec;
@@ -224,7 +224,7 @@ int main()
     srand (time(NULL));
 
     int maxWindowSize = 5, dim = 200;
-    double threshold = -0.25;
+    double threshold = -0.4;
 
     /*
 
@@ -302,19 +302,24 @@ int main()
 
     cout<<"STOPWORD SUCCESS\n";
 
-    for(int tk = 10; tk < 40;tk++)
+    for(int tk = 10; tk < 54;tk++)
     {
         w=0;
         string ft = "testfiles_sm/tf"+int2string(tk);
         cout<<ft<<endl;
         FILE* fo = fopen(ft.c_str(),"r");
         vector < vector <string> > sent;
+        vector < vector <string> > actsent;
+        
         //vector < vector <double> > contvec;
         vector <int> senseID;
         vector <string> words;
 
+        string runword="";
+
         int cnt=0, totalWords=0;
-        sent.resize(++cnt);
+        actsent.resize(++cnt);
+        sent.resize(cnt);
         while(1)
         {
             string word;
@@ -325,6 +330,10 @@ int main()
             {
                 sent.resize(++cnt);
                 sent[cnt-1].push_back(word);
+                actsent[cnt-2].push_back(runword);
+                runword="";
+                actsent.resize(cnt);
+                actsent[cnt-1].push_back(word);
                 totalWords++;
             }
             else
@@ -333,8 +342,12 @@ int main()
                 if(validword(word))
                 {
                     sent[cnt-1].push_back(word);
+                    actsent[cnt-1].push_back(runword+" "+word);
+                    runword="";
                     totalWords++;
                 }
+                else
+                    runword+=" "+word;
             }
         }
 
@@ -368,7 +381,7 @@ int main()
                     w++;
                     continue;
                 }
-                else if(wordfreq[words[w]]<=20000)
+                else if(wordfreq[words[w]]<=22000)
                 {
                     w++;
                     continue;
@@ -376,27 +389,36 @@ int main()
                 //cout<<"GOOD\n";
                 vector <double> contvec;
                 vector <string> skips;
-                int window = rand()%maxWindowSize+3, cnt = 0;
+                int window = rand()%maxWindowSize+2, cnt = 0;
                 //cout<<window<<endl;
                 InitNULL(contvec,dim);
                 for(int k = j-window ; k <= (j+window) ; k++)
                 {
                     if(k<0)
+                    {
                         contvec=contvec+wordvec["</s>"],skips.push_back("</s>");
+                        k=-1;
+                    }
                     else if(k>=sent[i].size())
+                    {
                         contvec=contvec+wordvec["</s>"],skips.push_back("</s>");
+                        cnt++;
+                        break;
+                    }
                     else if(wordvec.find(sent[i][k])==wordvec.end())
                         cnt--;
-                    else if(1)
-                        contvec=contvec+wordvec[sent[i][k]],skips.push_back(sent[i][k]);
+                    else if(k!=j)
+                        contvec=contvec+wordvec[sent[i][k]],skips.push_back(actsent[i][k]);
+                    else
+                        skips.push_back(actsent[i][k]);
                         //cout<<sent[i][k]<<",";
                     cnt++;
                 }
                 contvec = contvec/(cnt*(1.0));
                 //cout<<endl<<sent[i][j]<<endl;
                 //printer(contvec[w]);
-
-                senseID[w] = recluster(/*multisense*/contvec, words[w], skips, threshold);
+                if(skips.size()>3)
+                    senseID[w] = recluster(/*multisense*/contvec, words[w], skips, threshold);
                 w++;
             }
         }
@@ -404,10 +426,22 @@ int main()
         //printout(clust);
     }
 
+    FILE* fn = fopen("multisenses","w");
+
     for( map <string, senseList>::iterator iter = multisense.begin(); iter != multisense.end(); ++iter)
     {
         string k =  iter->first;
-        printout(multisense[k]);
+        fprintf(fn,"%s %d %d\n",k.c_str(),multisense[k].totalSenses,dim);
+        for(i=0;i<((multisense[k].senses).size());i++)
+        {
+            fprintf(fn,"%d\n",multisense[k].senses[i].senseNumber);
+            for(int t=0;t<multisense[k].senses[i].center.size();t++)
+                fprintf(fn,"%f ",multisense[k].senses[i].center[t]);
+            fprintf(fn,"\n");
+        }
     }
+
+    fclose(fn);
+
     return 0;
 }
