@@ -58,6 +58,7 @@ struct senseList{
 map <string, vector <double> > wordvec;
 map <string, senseList> multisense;
 map <string, int> wordfreq;
+map <string, int> stopword;
 
 void ReadWord(string &word, FILE *fin) {
   int a = 0;
@@ -212,11 +213,9 @@ string int2string(int n)
 int validword(string s)
 {
     if(s.length()<=1)
-    {
-        if((s=='a')||(s=='A')||(s=='I')||(s=='i'))
-            return 1;
-        else return 0;
-    }
+        return 0;
+    else if(stopword.find(s)!=stopword.end())
+        return 0;
     return 1;
 }
 
@@ -225,7 +224,7 @@ int main()
     srand (time(NULL));
 
     int maxWindowSize = 5, dim = 200;
-    double threshold = -0.35;
+    double threshold = -0.25;
 
     /*
 
@@ -287,6 +286,22 @@ int main()
 
     cout<<"SUCCESS\n";
 
+    fi = fopen("stopwords","r");
+    
+    while(1)
+    {
+        char str[110];
+        fscanf(fi,"%s",str);
+        string tmp = string(str);
+        stopword.insert(make_pair(tmp,1));
+        if(feof(fi))
+            break;
+    }
+
+    fclose(fi);
+
+    cout<<"STOPWORD SUCCESS\n";
+
     for(int tk = 10; tk < 40;tk++)
     {
         w=0;
@@ -310,13 +325,17 @@ int main()
             {
                 sent.resize(++cnt);
                 sent[cnt-1].push_back(word);
+                totalWords++;
             }
-            else if(validword(word))
+            else
             {
                 clean(word);
-                sent[cnt-1].push_back(word);
+                if(validword(word))
+                {
+                    sent[cnt-1].push_back(word);
+                    totalWords++;
+                }
             }
-            totalWords++;
         }
 
         fclose(fo);
@@ -357,7 +376,7 @@ int main()
                 //cout<<"GOOD\n";
                 vector <double> contvec;
                 vector <string> skips;
-                int window = rand()%maxWindowSize+2, cnt = 0;
+                int window = rand()%maxWindowSize+3, cnt = 0;
                 //cout<<window<<endl;
                 InitNULL(contvec,dim);
                 for(int k = j-window ; k <= (j+window) ; k++)
@@ -385,5 +404,10 @@ int main()
         //printout(clust);
     }
 
+    for( map <string, senseList>::iterator iter = multisense.begin(); iter != multisense.end(); ++iter)
+    {
+        string k =  iter->first;
+        printout(multisense[k]);
+    }
     return 0;
 }
