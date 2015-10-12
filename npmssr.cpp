@@ -5,6 +5,7 @@
 #include <cmath>
 #include <map>
 #include <vector>
+#include <cstring>
 #define MAX_STRING 100
 
 using namespace std;
@@ -101,9 +102,43 @@ double similarity(vector <double> arr, vector <double> bar)
     return (c/(sqrt(a)*sqrt(b)));
 }
 
+void clean(string &str)
+{
+    string tmp="";
+    int i=0;
+    for(i=0;i<str.length();i++)
+    {
+        if(isalnum(str[i]))
+        {
+            if((str[i]>='A')&&(str[i]<='Z'))
+                str[i]=str[i]-'A'+'a';
+            tmp+=str[i];
+        }
+    }
+    str=tmp;
+}
+
+void printer(vector <double> arr)
+{
+    for(int i=0;i<arr.size();i++)
+        printf("%.1f ",arr[i]);
+    cout<<endl;
+}
+
+void printout(senseList arr)
+{
+    int i=0;
+    cout<<"TOTAL CLUSTERS ARE "<<arr.totalSenses<<" "<<arr.size<<endl; 
+    for(i=0;i<arr.senses.size();i++)
+    {
+        cout<<arr.senses[i].senseNumber<<" "<<arr.senses[i].size<<" : ";
+        printer(arr.senses[i].center);
+    }
+}
+
 int main()
 {
-    int maxWindowSize = 5, dim = 100;
+    int maxWindowSize = 5, dim = 200;
     double threshold = -0.5;
 
     /*
@@ -126,7 +161,7 @@ int main()
 
     fscanf(fi,"%d%d",&numWords,&dim);
 
-    cout<<numWords<<dim<<endl;
+    cout<<numWords<<" "<<dim<<endl;
 
     for(i=0 ; i < numWords ; i++)
     {
@@ -147,10 +182,11 @@ int main()
 
     cout<<"SUCCESS\n";
 
-    FILE* fo = fopen("SOMEFILE","r");
+    FILE* fo = fopen("xaa","r");
     vector < vector <string> > sent;
     vector < vector <double> > contvec;
     vector <int> senseID;
+    vector <string> words;
 
     int cnt=0, totalWords=0;
     sent.resize(++cnt);
@@ -161,21 +197,33 @@ int main()
         if(feof(fo))
             break;
         if(word == "</s>")
+        {
             sent.resize(++cnt);
-        sent[cnt].push_back(word);
+            sent[cnt-1].push_back(word);
+        }
+        else
+        {
+            clean(word);
+            sent[cnt-1].push_back(word);
+        }
         totalWords++;
     }
 
     fclose(fo);
+
+    cout<<"SUCCESS\n";
 
     contvec.resize(totalWords+10);
     senseID.resize(totalWords+10);
     
     for(i=0;i<sent.size();i++)
     {
+        cout<<"I IS "<<i<<endl;
         for(j=0;j<sent[i].size();j++)
         {
-            int window = rand()%maxWindowSize+1, cnt = 0;
+            //cout<<"GOOD\n";
+            int window = rand()%maxWindowSize+3, cnt = 0;
+            //cout<<window<<endl;
             InitNULL(contvec[w],dim);
             for(int k = j-window ; k <= (j+window) ; k++)
             {
@@ -183,25 +231,34 @@ int main()
                     contvec[w]=contvec[w]+wordvec["</s>"];
                 else if(k>=sent[i].size())
                     contvec[w]=contvec[w]+wordvec["</s>"];
-                else if(wordvec.find(sent[i][j])==wordvec.end())
-                    continue;
+                else if(wordvec.find(sent[i][k])==wordvec.end())
+                    cnt--;
                 else if(k != j)
-                    contvec[w]=contvec[w]+wordvec[sent[i][j]];
+                    contvec[w]=contvec[w]+wordvec[sent[i][k]];
+                    //cout<<sent[i][k]<<",";
                 cnt++;
             }
             contvec[w] = contvec[w]/(cnt*(1.0));
+            //cout<<endl<<sent[i][j]<<endl;
+            //printer(contvec[w]);
+            words.push_back(sent[i][j]);
             w++;
         }
     }
 
+    /*for(i=0;i<w;i++)
+    {
+        cout<<i<<" : ";
+        printer(contvec[i]);
+    }
+    */
+
     senseList clust;
     
     int clt=0;
-    clust.totalSenses = 0;
-    (clust.senses).resize(++clt);
-    InitNULL((clust.senses[clt-1]).center,dim);
+    clust.totalSenses = clust.size = 0;
 
-    for(i=0;i<contvec.size();i++)
+    for(i=0;i<w;i++)
     {
         int id=0;
         double maxa = -10000;
@@ -214,13 +271,17 @@ int main()
                 id = j;
             }
         }
+        if(maxa<0)
+            cout<<words[i]<<" : "<<maxa<<endl;
         if(maxa < threshold)                                                                                //Define some threshold, discrete model for now
         {
             (clust.senses).resize(++clt);
             (clust.senses)[clt-1].center = contvec[i];
-            (clust.senses)[clt-1].senseNumber = clt;
+            (clust.senses)[clt-1].senseNumber = clt-1;
             (clust.senses)[clt-1].size++;
-            senseID[i] = clt;
+            clust.size++;
+            clust.totalSenses++;
+            senseID[i] = clt-1;
         }
         else
         {
@@ -231,4 +292,8 @@ int main()
             (clust.senses)[id].center = ((clust.senses)[id].center/((sz*(1.0))/(sz-1)));
         }
     }
+
+    printout(clust);
+
+    return 0;
 }
