@@ -184,6 +184,41 @@ double GlobalSim(string w1, string w2)
     return similarity(v1,v2);        
 }
 
+double AVGSim(string w1, string w2)
+{
+    int i,j,t;
+    senseList s1, s2;
+    if(multisense.find(w1)==multisense.end())
+    {
+        sense tmp;
+        if(wordvec.find(w1)==wordvec.end())
+            tmp.center = wordvec["UUUNKKK"];
+        else
+            tmp.center = wordvec[w1];
+        s1.senses.push_back(tmp);
+    }
+    else
+        s1 = multisense[w1];
+    if(multisense.find(w2)==multisense.end())
+    {
+        sense tmp;
+        if(wordvec.find(w2)==wordvec.end())
+            tmp.center = wordvec["UUUNKKK"];
+        else
+            tmp.center = wordvec[w2];
+        s2.senses.push_back(tmp);
+    }
+    else
+        s2 = multisense[w2];
+    double scor=0;
+    for(i=0;i<s1.senses.size();i++)
+    {
+        for(j=0;j<s2.senses.size();j++)
+            scor+=similarity(s1.senses[i].center,s2.senses[j].center);
+    }
+    return (scor/(i*j*(1.0)));        
+}
+
 double pearson(vector <double> s1, vector <double> s2)
 {
     double ma=0,mb=0,sa=0,sb=0,va=0,vb=0,mab=0,cnt=0;
@@ -459,13 +494,13 @@ int main()
             w++;
         }
         //cout<<target[0]<<":::"<<target[1]<<"  ";
-        double globsim = GlobalSim(target[0],target[1]);
-        //double avgsim = AVGSim(target[0],target[1]);
+        //double globsim = GlobalSim(target[0],target[1]);
+        double avgsim = AVGSim(target[0],target[1]);
         j = sent[i].size()-11;
         //cout<<sent[i][j]<<endl;
         double scor = atof(sent[i][j].c_str());
-        cout<<globsim<<" "<<scor<<"\n";
-        s1.push_back(globsim);
+        cout<<avgsim<<" "<<scor<<"\n";
+        s1.push_back(avgsim);
         s2.push_back(scor);
     }
 
