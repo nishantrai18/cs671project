@@ -115,7 +115,7 @@ void clean(string &str)
     int i=0;
     for(i=0;i<str.length();i++)
     {
-        if(isalnum(str[i]))
+        if(isalnum(str[i])||(str[i]=='.'))
         {
             if((str[i]>='A')&&(str[i]<='Z'))
                 str[i]=str[i]-'A'+'a';
@@ -169,6 +169,74 @@ int validword(string s)
     return 1;
 }
 
+double GlobalSim(string w1, string w2)
+{
+    vector <double> v1;
+    vector <double> v2;
+    if(wordvec.find(w1)==wordvec.end())
+        v1 = wordvec["UUUNKKK"];
+    else
+        v1 = wordvec[w1];
+    if(wordvec.find(w2)==wordvec.end())
+        v2 = wordvec["UUUNKKK"];
+    else
+        v2 = wordvec[w2];
+    return similarity(v1,v2);        
+}
+
+double pearson(vector <double> s1, vector <double> s2)
+{
+    double ma=0,mb=0,sa=0,sb=0,va=0,vb=0,mab=0,cnt=0;
+    for(int i=0;i<s1.size();i++)
+    {
+        ma+=s1[i];
+        mb+=s2[i];
+        sa+=(s1[i]*s1[i]);
+        sb+=(s2[i]*s2[i]);
+        mab+=(s1[i]*s2[i]);
+        cnt+=1;
+    }
+    ma/=cnt;
+    mb/=cnt;
+    mab/=cnt;
+    sa/=cnt;
+    sb/=cnt;
+    va = sqrt(sa-(ma*ma));
+    vb = sqrt(sb-(mb*mb));
+    return ((mab-(ma*mb))/(va*vb));
+}
+
+double spearman(vector <double> s1, vector <double> s2)
+{
+    double s=0,cnt=0;
+    vector <int> r1;
+    vector <int> r2;
+    vector < pair <double, int> > t1;
+    vector < pair <double, int> > t2;    
+    for(int i=0;i<s1.size();i++)
+    {
+        t1.push_back(make_pair(s1[i],i));
+        t2.push_back(make_pair(s2[i],i));
+        r1.push_back(0);
+        r2.push_back(0);
+    }
+    
+    sort(t1.begin(),t1.end());
+    sort(t2.begin(),t2.end());
+    for(int i=0;i<s1.size();i++)
+    {
+        r1[t1[i].second] = i;
+        r2[t2[i].second] = i;
+    }
+    for(int i=0;i<s1.size();i++)
+    {
+        s+=(r1[i]-r2[i])*(r1[i]-r2[i]);
+        cnt+=1;
+    }
+    s = ((6*s)/(((cnt*cnt)-1)*cnt));
+    return 1-s;
+}
+
 //Run for more iterations to see where it converges
 //Also try running with the estimated sense vectors
 //Modify code to include other embeddings too in the final output
@@ -188,28 +256,28 @@ int main()
     
     FILE* fi;
 
-    /*FILE* fn = fopen("multisenses3","w");                                                                       //INPUT MULTISENSE VECTORS
+    FILE* fn = fopen("multisenses3","r");                                                                       //INPUT MULTISENSE VECTORS
     while(!feof(fn))
     {
         char str[110];
         int totsense,dim;
-        fscanf(fn,"%s %d %d",str,totsense,dim);
+        fscanf(fn,"%s %d %d",str,&totsense,&dim);
         senseList some;
         some.totalSenses = totsense;
         for(i=0;i<totsense;i++)
         {
             int a,b;
             sense tmp;
-            tmp.senseNumber = i;
-            fscanf(fn,"%d",a);
+            fscanf(fn,"%d",&a);
+            tmp.senseNumber = a;
+            tmp.center.resize(dim);
             for(int t=0;t<dim;t++)
-                fscanf(fn,"%f",tmp.center[t]);
+                fscanf(fn,"%lf",&tmp.center[t]);
             some.senses.push_back(tmp);
         }
         multisense.insert(make_pair(string(str),some));
     }
     fclose(fn);
-    */
 
     fi = fopen("huang50rep","r");
     cout<<"SUCCESS\n";
@@ -298,10 +366,10 @@ int main()
             seq.resize(cnt);
             seq[cnt-1].push_back(0);
             totalWords++;
+            //cout<<endl;
         }
         else
         {
-            cout<<word<<",";
             clean(word);
             if(fg)
             {
@@ -314,6 +382,7 @@ int main()
                 sent[cnt-1].push_back(word);
                 seq[cnt-1].push_back(0);
                 totalWords++;
+                //cout<<word<<",";
             }
         }
     }
@@ -324,12 +393,11 @@ int main()
     cout<<"Sentences are "<<cnt<<endl;
 
     //contvec.resize(totalWords+10);
-    senseID.resize(totalWords+10);
-    
+    //senseID.resize(totalWords+10);
+
     cout<<"WHAT\n";
 
-
-    for(i=0;i<2;i++)
+    /*for(i=0;i<2;i++)
     {
         //cout<<"I IS "<<i<<endl;
         for(j=5;j<sent[i].size();j++)
@@ -337,24 +405,26 @@ int main()
             cout<<sent[i][j]<<":"<<seq[i][j]<<" ";
         }
         cout<<endl;
-    }
+    }*/
 
-    for(i=0;i<2;i++)
+    vector <double> s1;
+    vector <double> s2;
+    
+    for(i=0;i<sent.size()-1;i++)
     {
         //cout<<"I IS "<<i<<endl;
+        vector <string> target;
         for(j=5;j<sent[i].size();j++)
         {
             if(w%300000==0)
                 cout<<"WORDS COMPLETED ARE "<<w<<endl;
-            
-            senseID[w]=-1;
             words.push_back(sent[i][j]);
             if(seq[i][j]==0)
             {
                 w++;
                 continue;
             }
-            vector <double> contvec;
+            /*vector <double> contvec;
             vector <string> skips;
             int window = rand()%maxWindowSize+2, cnt = 0;
             //cout<<window<<endl;
@@ -384,9 +454,23 @@ int main()
             contvec = contvec/(cnt*(1.0));
             printer(contvec);
             printer_string(skips);
+            */
+            target.push_back(sent[i][j]);
             w++;
         }
+        //cout<<target[0]<<":::"<<target[1]<<"  ";
+        double globsim = GlobalSim(target[0],target[1]);
+        //double avgsim = AVGSim(target[0],target[1]);
+        j = sent[i].size()-11;
+        //cout<<sent[i][j]<<endl;
+        double scor = atof(sent[i][j].c_str());
+        cout<<globsim<<" "<<scor<<"\n";
+        s1.push_back(globsim);
+        s2.push_back(scor);
     }
+
+    cout<<spearman(s1,s2)<<endl;
+    cout<<pearson(s1,s2)<<endl;    
 
     return 0;
 }
