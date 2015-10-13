@@ -184,6 +184,9 @@ int recluster(vector <double> contvec, string words, vector <string> skips, doub
             (multisense[words].senses)[id].skipGram = skips;
     }
 
+    //if((maxa<0)&&(maxa>-1))
+    //    cout<<words<<" "<<maxa<<",,,,";
+
     if((maxa<threshold)&&(maxa>-1))
     {
         cout<<words<<" : "<<maxa<<", CLUSTERS ARE "<<multisense[words].totalSenses<<",,,,";
@@ -200,21 +203,22 @@ int recluster(vector <double> contvec, string words, vector <string> skips, doub
 
 string int2string(int n)
 {
-    string tmp="";
+    string tmp="",ans="";
     while(n>0)
     {
         tmp+=(n%10)+'0';
         n/=10;
     }
-    reverse(tmp.begin(),tmp.end());
-    return tmp;
+    for(int i=0;i<4-tmp.length();i++)
+        ans+='0';
+    for(int i=tmp.length()-1;i>=0;i--)
+        ans+=tmp[i];
+    return ans;
 }
 
 int validword(string s)
 {
-    if(s.length()<=1)
-        return 0;
-    else if(stopword.find(s)!=stopword.end())
+    if(stopword.find(s)!=stopword.end())
         return 0;
     return 1;
 }
@@ -223,8 +227,8 @@ int main()
 {
     srand (time(NULL));
 
-    int maxWindowSize = 5, dim = 200;
-    double threshold = -0.4;
+    int maxWindowSize = 5, dim = 50;
+    double threshold = -0.45;
 
     /*
 
@@ -234,7 +238,7 @@ int main()
 
     */
 
-    FILE* fi = fopen("vectors.bin","r");
+    FILE* fi = fopen("huang50rep","r");
 
     //Format is Number of words, Dimension 
     //string d doubles 
@@ -302,7 +306,7 @@ int main()
 
     cout<<"STOPWORD SUCCESS\n";
 
-    for(int tk = 10; tk < 54;tk++)
+    for(int tk = 0; tk < 200; tk++ )
     {
         w=0;
         string ft = "testfiles_sm/tf"+int2string(tk);
@@ -396,7 +400,7 @@ int main()
                 {
                     if(k<0)
                     {
-                        contvec=contvec+wordvec["</s>"],skips.push_back("</s>");
+                        contvec=contvec+wordvec["</s>"],skips.push_back("<s>");
                         k=-1;
                     }
                     else if(k>=sent[i].size())
@@ -406,7 +410,7 @@ int main()
                         break;
                     }
                     else if(wordvec.find(sent[i][k])==wordvec.end())
-                        cnt--;
+                        contvec=contvec+wordvec["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
                     else if(k!=j)
                         contvec=contvec+wordvec[sent[i][k]],skips.push_back(actsent[i][k]);
                     else
@@ -417,7 +421,7 @@ int main()
                 contvec = contvec/(cnt*(1.0));
                 //cout<<endl<<sent[i][j]<<endl;
                 //printer(contvec[w]);
-                if(skips.size()>3)
+                if(skips.size()>2)
                     senseID[w] = recluster(/*multisense*/contvec, words[w], skips, threshold);
                 w++;
             }
@@ -426,7 +430,7 @@ int main()
         //printout(clust);
     }
 
-    FILE* fn = fopen("multisenses","w");
+    FILE* fn = fopen("multisenses3","w");
 
     for( map <string, senseList>::iterator iter = multisense.begin(); iter != multisense.end(); ++iter)
     {
