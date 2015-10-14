@@ -273,7 +273,7 @@ int main()
     srand (time(NULL));
 
     int maxWindowSize = 3, dim = 50;
-    double threshold = -0.45;
+    double threshold = -0.5;
 
     /*
 
@@ -360,7 +360,6 @@ int main()
 
     cout<<"STOPWORD SUCCESS\n";
 
-    w=0;
     vector <int> senseID;
    
     for(int iter = 0; iter < 5; iter++)
@@ -384,8 +383,7 @@ int main()
             vector < vector <string> > actsent;
             
             //vector < vector <double> > contvec;
-            vector <string> words;
-
+            
             string runword="";
 
             int cnt=0, totalWords=0;
@@ -403,7 +401,6 @@ int main()
                     actsent[cnt-2].push_back(runword);
                     runword="";
                     actsent.resize(cnt);
-                    actsent[cnt-1].push_back("<s>");
                     totalWords++;
                 }
                 else
@@ -440,7 +437,9 @@ int main()
                         cout<<"WORDS COMPLETED ARE "<<w<<endl;
                     
                     senseID[w]=-1;
+                    vector <string> words;
                     words.push_back(sent[i][j]);
+                    
                     if(wordvec.find(words.back())==wordvec.end())
                     {
                         w++;
@@ -483,7 +482,7 @@ int main()
                         else if (k!=j)
                             contvec=contvec+(multisense[sent[i][k]].senses[senseID[w]].center)*tfidf[sent[i][j]],skips.push_back(actsent[i][k]);
                         else
-                            cnt--,skips.push_back(actsent[i][k]);
+                            cnt--,skips.push_back("["+actsent[i][k]+"]");
                             //cout<<sent[i][k]<<",";
                         cnt++;
                     }

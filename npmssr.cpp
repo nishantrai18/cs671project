@@ -78,9 +78,9 @@ void ReadWord(string &word, FILE *fin) {
   while (!feof(fin)) {
     ch = fgetc(fin);
     if (ch == 13) continue;
-    if ((ch == ' ') || (ch == '\t') || (ch == '\n')) {
+    if ((ch == ' ') || (ch == '\t') || (ch == '\n') ||  (ch == '\'')) {
       if (a > 0) {
-        if (ch == '\n') ungetc(ch, fin);
+        if ((ch == '\n') || (ch == '\'')) ungetc(ch, fin);
         break;
       }
       if (ch == '\n') {
@@ -124,7 +124,7 @@ void clean(string &str)
     int i=0;
     for(i=0;i<str.length();i++)
     {
-        if(isalnum(str[i]))
+        if(isalnum(str[i])||(str[i]=='-')||(str[i]=='\''))
         {
             if((str[i]>='A')&&(str[i]<='Z'))
                 str[i]=str[i]-'A'+'a';
@@ -138,6 +138,13 @@ void printer(vector <double> arr)
 {
     for(int i=0;i<arr.size();i++)
         printf("%.1f ",arr[i]);
+    cout<<endl;
+}
+
+void printer_string(vector <string> arr)
+{
+    for(int i=0;i<arr.size();i++)
+        cout<<arr[i]<<" ";
     cout<<endl;
 }
 
@@ -229,7 +236,9 @@ string int2string(int n)
 
 int validword(string s)
 {
-    if(stopword.find(s)!=stopword.end())
+    if(s=="")
+        return 0;
+    else if(stopword.find(s)!=stopword.end())
         return 0;
     return 1;
 }
@@ -285,6 +294,7 @@ int main()
     
     FILE* ft = fopen("tfidf.txt","r");
     
+    i=0;
     while(1)
     {
         char str[110];
@@ -294,12 +304,13 @@ int main()
         double tfd;
         //fscanf(fi,"%d%d",&waste,&f);
         fscanf(ft,"%lf",&tfd);
-        wordfreq.insert(make_pair(tmp,6000-i));
+        wordfreq.insert(make_pair(tmp,3000-i));
         tfidf.insert(make_pair(tmp,tfd));        
         if(i%10000==0)
             cout<<i<<endl;
         if(feof(fi))
             break;
+        i+=1;
     }
 
     fclose(fi);
@@ -350,11 +361,10 @@ int main()
             if(word == "</s>")
             {
                 sent.resize(++cnt);
-                sent[cnt-1].push_back(word);
                 actsent[cnt-2].push_back(runword);
                 runword="";
                 actsent.resize(cnt);
-                actsent[cnt-1].push_back(word);
+                actsent[cnt-1].push_back("<s>");
                 totalWords++;
             }
             else
@@ -363,12 +373,11 @@ int main()
                 if(validword(word))
                 {
                     sent[cnt-1].push_back(word);
-                    actsent[cnt-1].push_back(runword+" "+word);
+                    actsent[cnt-1].push_back(runword);
                     runword="";
                     totalWords++;
                 }
-                else
-                    runword+=" "+word;
+                runword+=" "+word;
             }
         }
 
@@ -427,7 +436,7 @@ int main()
                         break;
                     }
                     else if(wordvec.find(sent[i][k])==wordvec.end())
-                        contvec=contvec+wordvec["UUUNKKK"]*tfidf["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
+                        cnt--,contvec=contvec+wordvec["UUUNKKK"]*tfidf["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
                     else if(k!=j)
                         contvec=contvec+wordvec[sent[i][k]]*tfidf[sent[i][j]],skips.push_back(actsent[i][k]);
                     else
@@ -438,7 +447,7 @@ int main()
                 contvec = contvec/(cnt*(1.0));
                 //cout<<endl<<sent[i][j]<<endl;
                 //printer(contvec[w]);
-                if(skips.size()>2)
+                if(cnt>=4)
                     senseID[w] = recluster(/*multisense*/contvec, words[w], skips, threshold);
                 w++;
             }
@@ -447,7 +456,7 @@ int main()
         //printout(clust);
     }
 
-    FILE* fn = fopen("multisenses4","w");
+    /*FILE* fn = fopen("multisenses4","w");
 
     for( map <string, senseList>::iterator iter = multisense.begin(); iter != multisense.end(); ++iter)
     {
@@ -463,6 +472,7 @@ int main()
     }
 
     fclose(fn);
+    */
 
     return 0;
 }
