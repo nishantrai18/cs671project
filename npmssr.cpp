@@ -42,6 +42,16 @@ vector<double> operator/(const vector<double>& v1, const double& num)
     return tmp;
 }
 
+vector<double> operator*(const vector<double>& v1, const double& num)
+{
+    vector <double> tmp;
+    for (int i=0;i<v1.size();i++)
+    {
+        tmp.push_back(v1[i]*num);
+    }
+    return tmp;
+}
+
 struct sense{
     int senseNumber;
     vector <string> skipGram;
@@ -59,6 +69,7 @@ map <string, vector <double> > wordvec;
 map <string, senseList> multisense;
 map <string, int> wordfreq;
 map <string, int> stopword;
+map <string, double> tfidf;
 
 void ReadWord(string &word, FILE *fin) {
   int a = 0;
@@ -227,7 +238,7 @@ int main()
 {
     srand (time(NULL));
 
-    int maxWindowSize = 5, dim = 50;
+    int maxWindowSize = 3, dim = 50;
     double threshold = -0.45;
 
     /*
@@ -272,14 +283,19 @@ int main()
 
     fi = fopen("vocab.txt","r");
     
+    FILE* ft = fopen("tfidf.txt","r");
+    
     while(1)
     {
         char str[110];
         fscanf(fi,"%s",str);
         string tmp = string(str);
         int f,waste;
-        fscanf(fi,"%d%d",&waste,&f);
-        wordfreq.insert(make_pair(tmp,f));
+        double tfd;
+        //fscanf(fi,"%d%d",&waste,&f);
+        fscanf(ft,"%lf",&tfd);
+        wordfreq.insert(make_pair(tmp,6000-i));
+        tfidf.insert(make_pair(tmp,tfd));        
         if(i%10000==0)
             cout<<i<<endl;
         if(feof(fi))
@@ -287,6 +303,7 @@ int main()
     }
 
     fclose(fi);
+    fclose(ft);
 
     cout<<"SUCCESS\n";
 
@@ -385,7 +402,7 @@ int main()
                     w++;
                     continue;
                 }
-                else if(wordfreq[words[w]]<=22000)
+                else if(wordfreq[words[w]]<=0)
                 {
                     w++;
                     continue;
@@ -400,21 +417,21 @@ int main()
                 {
                     if(k<0)
                     {
-                        contvec=contvec+wordvec["</s>"],skips.push_back("<s>");
+                        contvec=contvec+wordvec["<s>"]*tfidf["<s>"],skips.push_back("<s>");
                         k=-1;
                     }
                     else if(k>=sent[i].size())
                     {
-                        contvec=contvec+wordvec["</s>"],skips.push_back("</s>");
+                        contvec=contvec+wordvec["</s>"]*tfidf["</s>"],skips.push_back("</s>");
                         cnt++;
                         break;
                     }
                     else if(wordvec.find(sent[i][k])==wordvec.end())
-                        contvec=contvec+wordvec["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
+                        contvec=contvec+wordvec["UUUNKKK"]*tfidf["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
                     else if(k!=j)
-                        contvec=contvec+wordvec[sent[i][k]],skips.push_back(actsent[i][k]);
+                        contvec=contvec+wordvec[sent[i][k]]*tfidf[sent[i][j]],skips.push_back(actsent[i][k]);
                     else
-                        skips.push_back(actsent[i][k]);
+                        cnt--,skips.push_back(actsent[i][k]);
                         //cout<<sent[i][k]<<",";
                     cnt++;
                 }
@@ -430,7 +447,7 @@ int main()
         //printout(clust);
     }
 
-    FILE* fn = fopen("multisenses3","w");
+    FILE* fn = fopen("multisenses4","w");
 
     for( map <string, senseList>::iterator iter = multisense.begin(); iter != multisense.end(); ++iter)
     {

@@ -115,7 +115,7 @@ void clean(string &str)
     int i=0;
     for(i=0;i<str.length();i++)
     {
-        if(isalnum(str[i])||(str[i]=='.'))
+        if(isalnum(str[i])||(str[i]=='.')||(str[i]=='-'))
         {
             if((str[i]>='A')&&(str[i]<='Z'))
                 str[i]=str[i]-'A'+'a';
@@ -238,6 +238,7 @@ double pearson(vector <double> s1, vector <double> s2)
     sb/=cnt;
     va = sqrt(sa-(ma*ma));
     vb = sqrt(sb-(mb*mb));
+    cout<<ma<<" "<<mb<<" "<<sa<<" "<<sb<<" "<<va<<" "<<vb<<endl;
     return ((mab-(ma*mb))/(va*vb));
 }
 
@@ -291,7 +292,7 @@ int main()
     
     FILE* fi;
 
-    FILE* fn = fopen("multisenses3","r");                                                                       //INPUT MULTISENSE VECTORS
+    /*FILE* fn = fopen("multisenses3","r");                                                                       //INPUT MULTISENSE VECTORS
     while(!feof(fn))
     {
         char str[110];
@@ -313,12 +314,17 @@ int main()
         multisense.insert(make_pair(string(str),some));
     }
     fclose(fn);
+    */
 
+
+    //fi = fopen("npmssr50d.txt","r");
     fi = fopen("huang50rep","r");
+    
     cout<<"SUCCESS\n";
 
     fscanf(fi,"%d%d",&numWords,&dim);
     cout<<numWords<<" "<<dim<<endl;
+    
     for(i=0 ; i < numWords ; i++)                                                                                   //INPUT GLOBAL VECTORS
     {
         char str[110];
@@ -332,19 +338,39 @@ int main()
         if(i%10000==0)
             cout<<i<<endl;
     }
+    
+    /*for(i=0 ; i < numWords ; i++)                                                                                   //INPUT GLOBAL VECTORS
+    {
+        char str[110];
+        int a;
+        fscanf(fi,"%s %d",str,&a);
+        string tmp = string(str);
+        //cout<<str<<","<<a<<":";
+        vector <double> vec;
+        vec.resize(dim);
+        for(j=0;j<dim;j++)
+            fscanf(fi,"%lf",&vec[j]);
+        wordvec.insert(make_pair(tmp,vec));
+        double tf;
+        for(j=0;j<2*a;j++)
+            for(int tj=0;tj<dim;tj++)
+                fscanf(fi,"%lf",&tf);
+        if(i%10000==0)
+            cout<<i<<endl;
+    }*/
     fclose(fi);
     
     cout<<"SUCCESS\n";
     i=0;
-    fi = fopen("vocab.txt","r");                                                                                    //INPUT VOCAB FREQUENCY
+    /*fi = fopen("vocab.txt","r");                                                                                    //INPUT VOCAB FREQUENCY
     while(1)
     {
         char str[110];
         fscanf(fi,"%s",str);
         string tmp = string(str);
         int f,waste;
-        fscanf(fi,"%d%d",&waste,&f);
-        wordfreq.insert(make_pair(tmp,f));
+        //fscanf(fi,"%d%d",&waste,&f);
+        wordfreq.insert(make_pair(tmp,20000-i));
         if(i%10000==0)
             cout<<i<<endl;
         if(feof(fi))
@@ -352,6 +378,7 @@ int main()
         i+=1;
     }
     fclose(fi);
+    */
 
     cout<<"SUCCESS\n";
     fi = fopen("stopwords","r");                                                                                    //INPUT STOPWORDS
@@ -397,9 +424,9 @@ int main()
         else if(word == "</s>")
         {
             sent.resize(++cnt);
-            sent[cnt-1].push_back(word);
+            //sent[cnt-1].push_back(word);
             seq.resize(cnt);
-            seq[cnt-1].push_back(0);
+            //seq[cnt-1].push_back(0);
             totalWords++;
             //cout<<endl;
         }
@@ -493,19 +520,20 @@ int main()
             target.push_back(sent[i][j]);
             w++;
         }
-        //cout<<target[0]<<":::"<<target[1]<<"  ";
-        //double globsim = GlobalSim(target[0],target[1]);
-        double avgsim = AVGSim(target[0],target[1]);
+        cout<<target[0]<<":::"<<target[1]<<"  ";
+        cout<<flush;
+        double globsim = GlobalSim(target[0],target[1]);
+        //double avgsim = AVGSim(target[0],target[1]);
         j = sent[i].size()-11;
         //cout<<sent[i][j]<<endl;
         double scor = atof(sent[i][j].c_str());
-        cout<<avgsim<<" "<<scor<<"\n";
-        s1.push_back(avgsim);
+        cout<<globsim<<":"<<scor<<"\n";
+        s1.push_back(globsim);
         s2.push_back(scor);
     }
 
-    cout<<spearman(s1,s2)<<endl;
     cout<<pearson(s1,s2)<<endl;    
+    cout<<spearman(s1,s2)<<endl;
 
     return 0;
 }
