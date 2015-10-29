@@ -6,3 +6,45 @@ Spearman correlation : 0.449687			(Couldn't recreate the claimed 58.6 correlatio
 NPMSSR50d
 Pearson correlation : 0.637642
 Spearman correlation : 0.621874
+
+googvecs50d
+Pearson correlation : 0.619276
+Spearman correlation : 0.614734
+
+Word contexts:
+
+plant : -0.57789, CLUSTERS ARE 2,,,, agricultural  outputs  include  poultry  and eggs  cattle  plant  nursery  items  peanuts  cotton  grains  such as corn 
+ in axillary  clusters  the whole plant  emits  a disagreeable 
+ 
+ hit : -0.566941, CLUSTERS ARE 2,,,, above the earths  horizon  just  as had been predicted  by the trajectory  specialists  as they hit  the thin outer  atmosphere  they noticed  it was becoming hazy  outside  as glowing 
+by timbaland  you owe  me was a hit  on the billboard  hiphop 
+
+date : -0.452011, CLUSTERS ARE 2,,,, aristotle  says  that on the subject  of reasoning  he had nothing else on an earlier  date  to speak  of however plato  reports 
+ for its tartness  and palm  sugar  made from the sugary  sap  of the date  palm  is used  to sweeten 
+ 
+ manchester : -0.460235, CLUSTERS ARE 2,,,, league  during both of these seasons  they reached  the quarterfinals  before going  out to manchester  united  despite  the sloppy 
+ in 1924  by fred  pickup  of manchester  when it was known  as pickups 
+ 
+ school : -0.51696, CLUSTERS ARE 2,,,, 20th  century  anarcho-syndicalism  arose as a [ distinct]  school of  thought within  anarchism with  greater 
+ day the  seniors [ ditch]  school  leaving behind 
+ 
+ Nearest neighbors
+ 
+ hit (#0) : hits , beat , charts , debut , record , got , singles , shot , biggest , chart , reached , straight , billboard , minutes , featured
+ 
+ hit (#1) : away , broken , turn , fly , holding , hands , unable , break , turns , looking , arm , walk , broke , hand , quickly
+ 
+ hit (Normal word2vec) : hits , hitting , homers , smash , scored , singles , evened , batted , strikeout , pinch , hitters , topped , charts , rbi , batters
+ 
+ Problems:
+ 
+black (#0) :  bear , red , like , light , little , called , man , stars , appearance , famous , created , scene , original , stage , said
+black (#1) : red , blue , green , brown , dark , wild , mixed , orange , bear , giant , simply , american , golden , white , composed
+
+Cluster 0 is a bit cluttered
+
+black (word2vec) : white , cebus , capuchin , skinned , supremacist , collar , panther , speckled , striped , dwarfs , smeared , hawk , mulatto , banshees , mantled  
+(Poor results by word2vec, maybe due to poor training) 
+ 
+ 
+ 

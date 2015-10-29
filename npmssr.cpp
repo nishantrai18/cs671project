@@ -105,6 +105,17 @@ void InitNULL(vector <double>& tmp, int size)
         tmp[i]=0;
 }
 
+void norm(vector <double> &arr)
+{
+    double a=(0.0000001);
+    a=(a*a*a*a*a);
+    int i=0;
+    for(i=0;i<arr.size();i++)
+        a += arr[i]*arr[i];
+    a=sqrt(a);
+    arr = arr/a;
+}
+
 double similarity(vector <double> arr, vector <double> bar)
 {
     double a=0,b=0,c=0;
@@ -196,14 +207,14 @@ int recluster(vector <double> contvec, string words, vector <string> skips, doub
         senseID = (multisense[words].senses)[id].senseNumber;
         int sz = (multisense[words].senses)[id].size;
         (multisense[words].senses)[id].center = (multisense[words].senses)[id].center + (contvec/(sz*(1.0)));
+        norm((multisense[words].senses)[id].center);
         (multisense[words].senses)[id].size++, sz++;
-        (multisense[words].senses)[id].center = ((multisense[words].senses)[id].center/((sz*(1.0))/(sz-1)));
         if((multisense[words].senses)[id].skipGram.size()<skips.size())
             (multisense[words].senses)[id].skipGram = skips;
     }
 
-    //if((maxa<0)&&(maxa>-1))
-    //    cout<<words<<" "<<maxa<<",,,,";
+    if((maxa<0)&&(maxa>-1))
+        cout<<words<<" "<<maxa<<",,,,";
 
     if((maxa<threshold)&&(maxa>-1))
     {
@@ -258,7 +269,8 @@ int main()
 
     */
 
-    FILE* fi = fopen("huang50rep","r");
+    //FILE* fi = fopen("huang50rep","r");
+    FILE* fi = fopen("googvecs","r");
 
     //Format is Number of words, Dimension 
     //string d doubles 
@@ -281,12 +293,20 @@ int main()
         vec.resize(dim);
         for(j=0;j<dim;j++)
             fscanf(fi,"%lf",&vec[j]);
+        norm(vec);
         wordvec.insert(make_pair(tmp,vec));
         if(i%10000==0)
             cout<<i<<endl;
     }
 
     fclose(fi);
+
+    if(wordvec.find("UUUNKKK")==wordvec.end())
+    {
+        vector <double> tmp;
+        InitNULL(tmp,dim);
+        wordvec.insert(make_pair("UUUNKKK",tmp));
+    }
 
     cout<<"SUCCESS\n";
 
@@ -364,7 +384,6 @@ int main()
                 actsent[cnt-2].push_back(runword);
                 runword="";
                 actsent.resize(cnt);
-                actsent[cnt-1].push_back("<s>");
                 totalWords++;
             }
             else
@@ -426,17 +445,20 @@ int main()
                 {
                     if(k<0)
                     {
-                        contvec=contvec+wordvec["<s>"]*tfidf["<s>"],skips.push_back("<s>");
+                        //contvec=contvec+wordvec["<s>"]*tfidf["<s>"],skips.push_back("<s>");
+                        cnt--;
                         k=-1;
                     }
                     else if(k>=sent[i].size())
                     {
-                        contvec=contvec+wordvec["</s>"]*tfidf["</s>"],skips.push_back("</s>");
-                        cnt++;
+                        //contvec=contvec+wordvec["</s>"]*tfidf["</s>"],skips.push_back("</s>");
+                        //cnt++;
+                        cnt--;
                         break;
                     }
                     else if(wordvec.find(sent[i][k])==wordvec.end())
-                        cnt--,contvec=contvec+wordvec["UUUNKKK"]*tfidf["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
+                        cnt--;
+                        //contvec=contvec+wordvec["UUUNKKK"]*tfidf["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
                     else if(k!=j)
                         contvec=contvec+wordvec[sent[i][k]]*tfidf[sent[i][j]],skips.push_back(actsent[i][k]);
                     else
@@ -444,7 +466,7 @@ int main()
                         //cout<<sent[i][k]<<",";
                     cnt++;
                 }
-                contvec = contvec/(cnt*(1.0));
+                norm(contvec);
                 //cout<<endl<<sent[i][j]<<endl;
                 //printer(contvec[w]);
                 if(cnt>=4)

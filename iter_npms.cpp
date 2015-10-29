@@ -112,8 +112,8 @@ void norm(vector <double> &arr)
     int i=0;
     for(i=0;i<arr.size();i++)
         a += arr[i]*arr[i];
-    for(i=0;i<arr.size();i++)
-        arr[i]/=a;
+    a=sqrt(a);
+    arr = arr/a;
 }
 
 double similarity(vector <double> arr, vector <double> bar)
@@ -273,7 +273,7 @@ int main()
     srand (time(NULL));
 
     int maxWindowSize = 3, dim = 50;
-    double threshold = -0.5;
+    double threshold = -0.55;
 
     /*
 
@@ -362,7 +362,7 @@ int main()
 
     vector <int> senseID;
    
-    for(int iter = 0; iter < 5; iter++)
+    for(int iter = 0; iter < 4; iter++)
     {
         cout<<"\n***********************************\n";
         cout<<"***********************************\n";
@@ -373,6 +373,7 @@ int main()
         cout<<"***********************************\n";
 
         int wdcnt = 0;
+        w=0;
 
         for(int tk = 0; tk < 50; tk++ )
         {
@@ -499,7 +500,7 @@ int main()
         }
     }
 
-    FILE* fn = fopen("multisenses_iter5","w");
+    FILE* fn = fopen("multisenses_iter","w");
 
     for( map <string, senseList>::iterator iter = multisense.begin(); iter != multisense.end(); ++iter)
     {
