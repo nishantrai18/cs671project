@@ -5,6 +5,12 @@ from read_word import *
 def PrecisionLimit (num):
 	return "%.2f" % num
 
+def CleanWord (word):
+	symbols = [',','\"',"\'",".","?","/","(",")"]
+	for c in symbols:
+		word = word.replace(c,'')
+	return word.lower()
+
 def MakeContextVec (fileName, wordVec, dim, wordID,  											
 					validWords, tfidf, stopWords, 
 					selWords, window, fileList):												#tfidf's, words to be considered as input
@@ -13,6 +19,9 @@ def MakeContextVec (fileName, wordVec, dim, wordID,
 	with open(fileName,"r") as f:																#Read the word vectors from the file
 		for line in f:
 			sentence = line.strip().split(' ')													#Get a list of words
+			for i in range(0, len(sentence)):
+				sentence[i] = CleanWord(sentence[i])
+
 			for i in range (0, len(sentence)):
 				if (sentence[i] in selWords):													#If current word is in the context list
 					wordVector = np.zeros(dim)								
@@ -28,8 +37,9 @@ def MakeContextVec (fileName, wordVec, dim, wordID,
 								#print (tfidf[sentence[j]])
 								#print (wordVec[wordID[sentence[j]]])
 								wordVector = wordVector + (tfidf[sentence[j]]*wordVec[wordID[sentence[j]]])
-					for k in range(0,len(wordVector)):
-						fileList[sentence[i]].write(str(PrecisionLimit(wordVector[k]))+" ")
+					if (wordVector.dot(wordVector) > 0):
+						for k in range(0,len(wordVector)):
+							fileList[sentence[i]].write(str(PrecisionLimit(wordVector[k]))+" ")
 					fileList[sentence[i]].write("\n")
 
 wordVec = {}																		#Takes integer as argument and maps it to a word vector
@@ -37,7 +47,8 @@ wordID = {}																			#Takes a word and maps it to an id
 numIDS = {}																			#Inverse mapping for wordVec
 dim = 0
 
-wordVec, wordID, numIDS, dim = GetWordVec("../googvecs")
+#wordVec, wordID, numIDS, dim = GetWordVec("../googvecs")
+wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
 
 print "INPUT WORD VECTORS COMPLETE"
 
@@ -95,7 +106,7 @@ np.set_printoptions(suppress=True)
 i = 0
 window = 5
 
-while (i < trimNum/10):
+while (i < trimNum):
 	wordSlice = multiList[i:i+100]
 	selWords = []
 
@@ -106,9 +117,9 @@ while (i < trimNum/10):
 
 	fileList = {}
 	for j in selWords:
-		fileList[j] = open("wordcontexts/"+j+".cont", "a")
+		fileList[j] = open("wordcontexts"+str(dim)+"d/"+j+".cont", "a")
 
-	for m in range(11,15):
+	for m in range(11,30):
 		fileName = "../testfiles_sm/tf00"+str(m)
 		print fileName
 		MakeContextVec(fileName, wordVec, dim, wordID, validWords, tfidf, stopWords, selWords, window, fileList)
@@ -119,4 +130,3 @@ while (i < trimNum/10):
 		fileList[j].close()
 	
 	print i, "IS DONE",
-
