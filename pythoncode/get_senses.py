@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
 
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
@@ -32,39 +33,40 @@ def cluster(word, numClusters, dim): 									#Takes the word for which numClust
 
 	print "INPUT CONTEXTS COMPLETE"
 
-	clf = KMeans(n_clusters=numClusters)
+	clf = KMeans(n_clusters=numClusters)									#In case of normalised data points, euclidean k means is the same as spherical
 	result = clf.fit_predict(contextList)									#Finds cluster centres and assigns each vector a centre
 
 	centroids = clf.cluster_centers_
-	print centroids
 
-	print result
+	return centroids
 
-		###############################################################################
+def ClusterPlot (data, numClusters):
+	###############################################################################
 	# Visualize the results on PCA-reduced contextList
 
-	reduced_data = PCA(n_components=2).fit_transform(contextList)
+	#reduced_data = PCA(n_components=2).fit_transform(contextList)
+
+	print "BUSY IN TSNE"
+
+	model = TSNE(n_components=2, random_state=0)
+	reduced_data = model.fit_transform(data)
+
+	print "DATA REDUCED"
+
 	kmeans = KMeans(n_clusters=numClusters)
 	kmeans.fit(reduced_data)
 
-	# Step size of the mesh. Decrease to increase the quality of the VQ.
-	h = .02     # point in the mesh [x_min, m_max]x[y_min, y_max].
-
 	# Plot the decision boundary. For that, we will assign a color to each
-
-	#x_min, x_max = reduced_data[:, 0].min() + 1, reduced_data[:, 0].max() - 1
-	#y_min, y_max = reduced_data[:, 1].min() + 1, reduced_data[:, 1].max() - 1
 	x_min, x_max = reduced_data[:, 0].min(), reduced_data[:, 0].max()
 	y_min, y_max = reduced_data[:, 1].min(), reduced_data[:, 1].max()
 	
+	# Step size of the mesh. Decrease to increase the quality of the VQ.
+	h = ((x_max-x_min)/100)     # point in the mesh [x_min, m_max]x[y_min, y_max].
 
 	print x_min, x_max
 	print y_min, y_max
 	xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
 
-	print np.arange(x_min, x_max, h)
-	print xx
-	print yy
 	# Obtain labels for each point in mesh. Use last trained model.
 	Z = kmeans.predict(np.c_[xx.ravel(), yy.ravel()])
 
@@ -83,8 +85,50 @@ def cluster(word, numClusters, dim): 									#Takes the word for which numClust
 	plt.scatter(centroids[:, 0], centroids[:, 1],
 	            marker='x', s=169, linewidths=3,
 	            color='w', zorder=10)
+
+	labels = ['point{0}'.format(i) for i in range(len(reduced_data))]
+	for label, x, y in zip(labels, reduced_data[:, 0], reduced_data[:, 1]):
+	    plt.annotate(
+	        label, 
+	        xy = (x, y), xytext = (-20, 20),
+	        textcoords = 'offset points', ha = 'right', va = 'bottom',
+	        bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
+	        arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+
 	plt.title('K-means clustering on the digits dataset (PCA-reduced data)\n'
 	          'Centroids are marked with white cross')
+	plt.xlim(x_min, x_max)
+	plt.ylim(y_min, y_max)
+	plt.xticks(())
+	plt.yticks(())
+	plt.show()
+
+
+def PlotTSNE (data, labels):										#Takes the data and the labels
+	# Visualize the results on TSNE reduced data
+
+	print "BUSY IN TSNE"
+
+	model = TSNE(n_components=2, random_state=0)
+	reduced_data = model.fit_transform(data)
+
+	print "DATA REDUCED"
+
+	# Plot the decision boundary. For that, we will assign a color to each
+	x_min, x_max = reduced_data[:, 0].min(), reduced_data[:, 0].max()
+	y_min, y_max = reduced_data[:, 1].min(), reduced_data[:, 1].max()
+	
+	plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
+	
+	for label, x, y in zip(labels, reduced_data[:, 0], reduced_data[:, 1]):
+	    plt.annotate(
+	        label, 
+	        xy = (x, y), xytext = (-20, 20),
+	        textcoords = 'offset points', ha = 'right', va = 'bottom',
+	        bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
+	        arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+
+	plt.title('TSNE Plot')
 	plt.xlim(x_min, x_max)
 	plt.ylim(y_min, y_max)
 	plt.xticks(())

@@ -73,7 +73,7 @@ with open("../tfidf.txt","r") as f:																#Get the tfidf of words
 print "GETTING TFIDF COMPLETE"														#Getting list of stopwords	
 
 print wordFreq[:100]
-print wordVec.keys()[:100] 	
+#print wordVec.keys()[:100] 	
 
 multiList = []
 vocabID = {}
@@ -88,7 +88,7 @@ for i in range(0,trimNum):
 
 sz = len(multiList)
 
-#print multiList
+print len(multiList)
 
 print "SIZE IS ", sz
 
@@ -107,26 +107,28 @@ i = 0
 window = 5
 
 while (i < trimNum):
-	wordSlice = multiList[i:i+100]
+	wordSlice = multiList[i:i+200]
 	selWords = []
 
 	for w in wordSlice:
 		if (w.isalpha()):
 			selWords.append(w)
-	i += 100
+	i += 200
 
 	fileList = {}
 	for j in selWords:
 		fileList[j] = open("wordcontexts"+str(dim)+"d/"+j+".cont", "a")
 
-	for m in range(11,30):
+	for m in range(11,69):
 		fileName = "../testfiles_sm/tf00"+str(m)
-		print fileName
+		print fileName,
 		MakeContextVec(fileName, wordVec, dim, wordID, validWords, tfidf, stopWords, selWords, window, fileList)
 	
 		print m, "IS DONE",
+		if(m%3==0):
+			print "\n"
 
 	for j in selWords:
 		fileList[j].close()
 	
-	print i, "IS DONE",
+	print i, "IS DONE"
