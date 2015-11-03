@@ -7,7 +7,8 @@ def PrecisionLimit (num):
 np.set_printoptions(precision=2)															#Pretty print
 np.set_printoptions(suppress=True)
 
-wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
+#wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
+wordVec, wordID, numIDS, dim = GetWordVec("../googvecs")
 
 print "GETTING WORDVECS COMPLETE"
 
@@ -21,7 +22,7 @@ tfidf = {}
 validWords = set(wordID)&set(wordFreq)								#Create set of valid words
 
 multiList = []
-trimNum = 1000																		#Get the number of words to consider
+trimNum = 6000																		#Get the number of words to consider
 																					#Create the trimmed list of words
 for i in range(0,trimNum):
 	if (wordFreq[i] in validWords):
@@ -29,15 +30,26 @@ for i in range(0,trimNum):
 
 numClusters = input("INPUT NUMBER OF CLUSTERS : ")
 
-fo = open("multisense/multisenses"+str(numClusters)+"n.vec","w")
+fo = open("multisense/multisenses"+str(numClusters)+"n"+str(dim)+"d.vec","a")
 
-for w in multiList:
+cnt=0
+print multiList[2891]
+
+for w in multiList[2892:]:
+	if (not w.isalpha()):
+		continue
+
+	if(cnt%5==0):
+		print "\n",
+	print " :: ",cnt,w, 
+	cnt+=1
+
 	senses = cluster(w, numClusters, dim)
 	fo.write(w + " " + str(len(senses)) + " " + str(dim) + "\n")
 	for i in range(0,len(senses)):
 		fo.write(str(i) + "\n")
 		for num in senses[i]:
-			fo.write(str(PrecisionLimit(num)+" ")
+			fo.write(str(PrecisionLimit(num)+" "))
 		fo.write("\n")
 
 fo.close()

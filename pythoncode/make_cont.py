@@ -1,6 +1,7 @@
 import numpy as np
 
 from read_word import *
+from get_senses import *
 
 def PrecisionLimit (num):
 	return "%.2f" % num
@@ -11,9 +12,19 @@ def CleanWord (word):
 		word = word.replace(c,'')
 	return word.lower()
 
+def sim (wA, wB, wordVec, wordID):									#Gives the cosine similarity
+	vecA = wordVec[wordID[wA]]
+	vecB = wordVec[wordID[wB]]
+	dot = vecA.dot(vecB)
+	normA = np.sqrt(vecA.dot(vecA))
+	normB = np.sqrt(vecB.dot(vecB))
+	similarity = (dot/(normA*normB))
+	return similarity
+
 def MakeContextVec (fileName, wordVec, dim, wordID,  											
-					validWords, tfidf, stopWords, 
+					validWords, tfidf, stopWords, simWords,										
 					selWords, window, fileList):												#tfidf's, words to be considered as input
+																								#simWords is a dictionary with similarities
 																								#window is the length considered to the left and right
 																								#vocabID is the vocabulary integer mapping 
 	with open(fileName,"r") as f:																#Read the word vectors from the file
@@ -34,13 +45,17 @@ def MakeContextVec (fileName, wordVec, dim, wordID,
 							continue
 						elif (sentence[j] in validWords):											#Checks if present in vocabulary
 							if(sentence[j] not in stopWords):
-								#print (tfidf[sentence[j]])
-								#print (wordVec[wordID[sentence[j]]])
-								wordVector = wordVector + (tfidf[sentence[j]]*wordVec[wordID[sentence[j]]])
+								if (tfidf[sentence[j]] > 0):
+									#print (tfidf[sentence[j]])
+									#print (wordVec[wordID[sentence[j]]])
+									wordVector = wordVector + \
+									(tfidf[sentence[j]]*sim(sentence[i], sentence[j], wordVec, wordID))*wordVec[wordID[sentence[j]]]					
+																							#Change here to alter the construction of context vectors
 					if (wordVector.dot(wordVector) > 0):
+						wordVector = Normalize(wordVector)
 						for k in range(0,len(wordVector)):
 							fileList[sentence[i]].write(str(PrecisionLimit(wordVector[k]))+" ")
-					fileList[sentence[i]].write("\n")
+						fileList[sentence[i]].write("\n")
 
 wordVec = {}																		#Takes integer as argument and maps it to a word vector
 wordID = {}																			#Takes a word and maps it to an id 
@@ -80,7 +95,7 @@ vocabID = {}
 invVocab = {}
 numIDS = 0
 
-trimNum = 1000																		#Get the number of words to consider
+trimNum = 1200																		#Get the number of words to consider
 																					#Create the trimmed list of words
 for i in range(0,trimNum):
 	if (wordFreq[i] in validWords):
@@ -91,6 +106,33 @@ sz = len(multiList)
 print len(multiList)
 
 print "SIZE IS ", sz
+
+
+simWords = {}
+
+###############TFIDF PRUNING########################
+tfidfList = tfidf.values()
+tfidfList.sort()
+#tmp = tfidfList[int(-(0.99)*len(tfidfList))]											#Change this hyper parameter to get different results
+tmp = 2
+
+print "THE PRUNED TFIDF IS",tmp
+
+for x in tfidf.keys():
+	if (tfidf[x] < tmp):
+		tfidf[x] = 0
+#################PRUNING COMPLETE####################
+
+"""
+################CREATE SIMILARITY DICTIONARY################
+
+for w in multiList:
+	for x in tfidf.keys():
+		if (tfidf.get(x, 0) > 0):
+			simWords[(w,x)] = sim(w, x, wordVec, wordID)
+			simWords[(x,w)] = simWords[(w,x)]
+############################################################
+"""
 
 np.set_printoptions(precision=2)															#Pretty print
 np.set_printoptions(suppress=True)
@@ -103,30 +145,34 @@ np.set_printoptions(suppress=True)
 #We append the context vector for a word in a file named <word>.cont
 #We compute the vectors of only the words which have their files open
 
-i = 0
+i = 700																		#Starting point
+
 window = 5
 
 while (i < trimNum):
-	wordSlice = multiList[i:i+200]
+	wordSlice = multiList[i:i+500]
 	selWords = []
 
 	for w in wordSlice:
 		if (w.isalpha()):
 			selWords.append(w)
-	i += 200
+	i += 500
 
 	fileList = {}
 	for j in selWords:
-		fileList[j] = open("wordcontexts"+str(dim)+"d/"+j+".cont", "a")
+		fileList[j] = open("wordcontexts"+str(dim)+"d_B/"+j+".cont", "a")
 
-	for m in range(11,69):
+		#wordcontexts_A : It contains naive construction of context vectors.
+		#wordcontexts_B : It involves the usage of similarity metric while computing the context vectors.
+
+	for m in range(11,39):
 		fileName = "../testfiles_sm/tf00"+str(m)
 		print fileName,
-		MakeContextVec(fileName, wordVec, dim, wordID, validWords, tfidf, stopWords, selWords, window, fileList)
+		MakeContextVec(fileName, wordVec, dim, wordID, validWords, tfidf, stopWords, simWords, selWords, window, fileList)
 	
 		print m, "IS DONE",
 		if(m%3==0):
-			print "\n"
+			print "\n",
 
 	for j in selWords:
 		fileList[j].close()

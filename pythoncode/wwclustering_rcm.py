@@ -4,7 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-filename = "googvecs"
+filename = "../googvecs"
 
 wordvec = {}																		#Takes integer as argument and maps it to a word vector
 wordid = {}																			#Takes a word and maps it to an id 
@@ -29,7 +29,7 @@ with open(filename,"r") as f:																#Read the word vectors from the fil
 				vector.append(y)
 			wordvec[wordid[word]] = vector
 
-filename = "stopwords"
+filename = "../stopwords"
 
 stops = []
 
@@ -42,7 +42,7 @@ wfreq = []
 
 #print stops
 
-filename = "vocab.txt"
+filename = "../vocab.txt"
 
 with open(filename,"r") as f:																#Get a list of frequent words in order
 	for line in f:
@@ -80,7 +80,7 @@ mat = np.zeros((sz,sz))																		#Cooccurence matric of the trimmed word
 #Build the word word coocurence matrix/ Construct the context vectors
 
 for ti in range(11,40):
-	filename = "testfiles_sm/tf00"+str(ti)
+	filename = "../testfiles_sm/tf00"+str(ti)
 	print filename
 
 	with open(filename,"r") as f:																#Read the word vectors from the file

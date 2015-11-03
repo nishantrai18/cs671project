@@ -42,6 +42,16 @@ vector<double> operator/(const vector<double>& v1, const double& num)
     return tmp;
 }
 
+vector<double> operator*(const vector<double>& v1, const double& num)
+{
+    vector <double> tmp;
+    for (int i=0;i<v1.size();i++)
+    {
+        tmp.push_back(v1[i]*num);
+    }
+    return tmp;
+}
+
 struct sense{
     int senseNumber;
     vector <string> skipGram;
@@ -59,6 +69,7 @@ map <string, vector <double> > wordvec;
 map <string, senseList> multisense;
 map <string, int> wordfreq;
 map <string, int> stopword;
+map <string, double> tfidf;
 
 void ReadWord(string &word, FILE *fin) {
   int a = 0;
@@ -92,6 +103,17 @@ void InitNULL(vector <double>& tmp, int size)
     tmp.resize(size);
     for(int i=0;i<size;i++)
         tmp[i]=0;
+}
+
+void norm(vector <double> &arr)
+{
+    double a=(0.0000001);
+    a=(a*a*a*a*a);
+    int i=0;
+    for(i=0;i<arr.size();i++)
+        a += arr[i]*arr[i];
+    a=sqrt(a);
+    arr = arr/a;
 }
 
 double similarity(vector <double> arr, vector <double> bar)
@@ -130,7 +152,7 @@ void clean(string &str)
 void printer(vector <double> arr)
 {
     for(int i=0;i<arr.size();i++)
-        printf("%.1f ",arr[i]);
+        printf("%.2f ",arr[i]);
     cout<<endl;
 }
 
@@ -190,8 +212,10 @@ double AVGSim(string w1, string w2)
 {
     int i,j,t;
     senseList s1, s2;
+    
     if(multisense.find(w1)==multisense.end())
     {
+        cout<<"NOT FOUND";
         sense tmp;
         if(wordvec.find(w1)==wordvec.end())
             tmp.center = wordvec["UUUNKKK"];
@@ -200,9 +224,10 @@ double AVGSim(string w1, string w2)
         s1.senses.push_back(tmp);
     }
     else
-        s1 = multisense[w1],cout<<w1;
+        s1 = multisense[w1];
     if(multisense.find(w2)==multisense.end())
     {
+        cout<<"NOT FOUND";
         sense tmp;
         if(wordvec.find(w2)==wordvec.end())
             tmp.center = wordvec["UUUNKKK"];
@@ -211,12 +236,75 @@ double AVGSim(string w1, string w2)
         s2.senses.push_back(tmp);
     }
     else
-        s2 = multisense[w2],cout<<w2;
+        s2 = multisense[w2];
     double scor=0;
     for(i=0;i<s1.senses.size();i++)
     {
         for(j=0;j<s2.senses.size();j++)
             scor+=similarity(s1.senses[i].center,s2.senses[j].center);
+    }
+    return (scor/(i*j*(1.0)));        
+}
+
+double ProbMap(double t)
+{
+    return (1/(1.001-t));
+}
+
+void ComputeProb(vector <double> c, senseList s, vector <double> &prob)
+{
+    double sum=0;
+    for(int i=0;i<s.senses.size();i++)
+    {
+        double t = similarity(c,s.senses[i].center);
+        t = ProbMap(t);
+        prob.push_back(t);
+        sum += t;
+        cout<<t<<",";
+    }
+    prob = prob/sum;
+    cout<<"THE TOTAL IS "<<sum<<endl;
+}
+
+double AVGSimC(string w1, vector <double> c1, string w2, vector <double> c2)
+{
+    int i,j,t;
+    senseList s1, s2;
+    
+    if(multisense.find(w1)==multisense.end())
+    {
+        cout<<"NOT FOUND";
+        sense tmp;
+        if(wordvec.find(w1)==wordvec.end())
+            tmp.center = wordvec["UUUNKKK"];
+        else
+            tmp.center = wordvec[w1];
+        s1.senses.push_back(tmp);
+    }
+    else
+        s1 = multisense[w1];
+    if(multisense.find(w2)==multisense.end())
+    {
+        cout<<"NOT FOUND";
+        sense tmp;
+        if(wordvec.find(w2)==wordvec.end())
+            tmp.center = wordvec["UUUNKKK"];
+        else
+            tmp.center = wordvec[w2];
+        s2.senses.push_back(tmp);
+    }
+    else
+        s2 = multisense[w2];
+    double scor=0;
+    vector <double> prob1, prob2;
+    cout<<"SOME1\n";
+    ComputeProb(c1,s1,prob1);
+    cout<<"SOME2\n";
+    ComputeProb(c2,s2,prob2);
+    for(i=0;i<s1.senses.size();i++)
+    {
+        for(j=0;j<s2.senses.size();j++)
+            scor+=(prob1[i]*prob2[j]*similarity(s1.senses[i].center,s2.senses[j].center));
     }
     return (scor/(i*j*(1.0)));        
 }
@@ -289,18 +377,21 @@ int main()
 
     int numWords;
     int i,j,t,w=0;
-    map <string, senseList> multisense;
     cout<<"SUCCESS\n";
     
     FILE* fi;
 
     //FILE* fn = fopen("multisenses3","r");                                                                       //INPUT MULTISENSE VECTORS
-    FILE* fn = fopen("server_data/multisenses6","r");                                                                       //INPUT MULTISENSE VECTORS
+    FILE* fn = fopen("server_data/multisenses3n300d_goog6000.vec","r");                                                                       //INPUT MULTISENSE VECTORS
+    //FILE* fn = fopen("server_data/multisenses3n50d_huang6000.vec","r");
     while(!feof(fn))
     {
         char str[110];
         int totsense,dim;
-        fscanf(fn,"%s %d %d",str,&totsense,&dim);
+        fscanf(fn,"%s %d %d",str,&totsense,&dim);   
+        //cout <<"|"<<string(str)<<","<<totsense<<","<<dim<<"|,";
+        if (totsense == 0)
+            continue;
         senseList some;
         some.totalSenses = totsense;
         for(i=0;i<totsense;i++)
@@ -318,11 +409,11 @@ int main()
     }
     fclose(fn);
     
-
+    //printf("THE Truth value is : %d\n",multisense.find("brazil")==multisense.end());
 
     //fi = fopen("npmssr50d.txt","r");
-    fi = fopen("huang50rep","r");
-    //fi = fopen("googvecs","r");
+    //fi = fopen("huang50rep","r");
+    fi = fopen("googvecs","r");
     
     cout<<"SUCCESS\n";
 
@@ -388,6 +479,33 @@ int main()
     }
     fclose(fi);
     */
+
+    fi = fopen("vocab.txt","r");
+    
+    FILE* ft = fopen("tfidf.txt","r");
+    
+    i=0;
+    while(1)
+    {
+        char str[110];
+        fscanf(fi,"%s",str);
+        string tmp = string(str);
+        int f,waste;
+        double tfd;
+        //fscanf(fi,"%d%d",&waste,&f);
+        fscanf(ft,"%lf",&tfd);
+        wordfreq.insert(make_pair(tmp,6000-i));
+        tfidf.insert(make_pair(tmp,tfd));        
+        if(i%10000==0)
+            cout<<i<<endl;
+        if(feof(fi))
+            break;
+        i+=1;
+    }
+
+    fclose(fi);
+    fclose(ft);
+
 
     cout<<"SUCCESS\n";
     fi = fopen("stopwords","r");                                                                                    //INPUT STOPWORDS
@@ -463,29 +581,13 @@ int main()
     cout<<"SUCCESS, total words are : "<<totalWords<<"\n";
     cout<<"Sentences are "<<cnt<<endl;
 
-    //contvec.resize(totalWords+10);
-    //senseID.resize(totalWords+10);
-
-    cout<<"WHAT\n";
-
-    /*for(i=0;i<2;i++)
-    {
-        //cout<<"I IS "<<i<<endl;
-        for(j=5;j<sent[i].size();j++)
-        {
-            cout<<sent[i][j]<<":"<<seq[i][j]<<" ";
-        }
-        cout<<endl;
-    }*/
-
-    vector <double> s1;
-    vector <double> s2;
-    vector <double> s3;
+    vector <double> s1, s2, s3, s4;
     
     for(i=0;i<sent.size()-1;i++)
     {
         //cout<<"I IS "<<i<<endl;
         vector <string> target;
+        vector < vector <double> > contexts;
         for(j=5;j<sent[i].size();j++)
         {
             if(w%300000==0)
@@ -496,50 +598,51 @@ int main()
                 w++;
                 continue;
             }
-            /*vector <double> contvec;
+            target.push_back(sent[i][j]);
+            //cout<<"GOOD\n";
+            vector <double> contvec;
             vector <string> skips;
-            int window = rand()%maxWindowSize+2, cnt = 0;
-            //cout<<window<<endl;
+            //int window = rand()%maxWindowSize+2, cnt = 0;
+            int window = 5, cnt = 0;
             InitNULL(contvec,dim);
             for(int k = j-window ; k <= (j+window) ; k++)
             {
                 if(k<0)
                 {
-                    contvec=contvec+wordvec["<s>"],skips.push_back("<s>");
+                    if(wordvec.find("<s>")!=wordvec.end())
+                        contvec=contvec+wordvec["<s>"]*tfidf["<s>"],skips.push_back("<s>");
                     k=-1;
                 }
                 else if(k>=sent[i].size())
                 {
-                    contvec=contvec+wordvec["</s>"],skips.push_back("</s>");
-                    cnt++;
+                    if(wordvec.find("</s>")!=wordvec.end())
+                        contvec=contvec+wordvec["</s>"]*tfidf["</s>"],skips.push_back("</s>");
                     break;
                 }
                 else if(wordvec.find(sent[i][k])==wordvec.end())
-                    cnt--;
+                    contvec=contvec+wordvec["UUUNKKK"]*tfidf["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
                 else if(k!=j)
-                    contvec=contvec+wordvec[sent[i][k]],skips.push_back(sent[i][k]);
-                else
-                    skips.push_back(sent[i][k]);
-                    //cout<<sent[i][k]<<",";
-                cnt++;
+                    contvec=contvec+wordvec[sent[i][k]]*tfidf[sent[i][j]];
             }
-            contvec = contvec/(cnt*(1.0));
-            printer(contvec);
-            printer_string(skips);
-            */
-            target.push_back(sent[i][j]);
+            norm(contvec);
+            contexts.push_back(contvec);
             w++;
         }
         cout<<target[0]<<":::"<<target[1]<<"  ";
         cout<<flush;
         double globsim = GlobalSim(target[0],target[1]);
         double avgsim = AVGSim(target[0],target[1]);
+        //cout<<contexts.size()<<" AND YORO\n";
+        //printer(contexts[0]);
+        //printer(contexts[1]);
+        double avgsimc = AVGSimC(target[0],contexts[0],target[1],contexts[1]);
         j = sent[i].size()-11;
         //cout<<sent[i][j]<<endl;
         double scor = atof(sent[i][j].c_str());
-        cout<<avgsim<<","<<globsim<<":"<<scor<<"\n";
+        cout<<avgsim<<","<<globsim<<","<<avgsimc<<":"<<scor<<"\n";
         s1.push_back(avgsim);
         s3.push_back(globsim);
+        s4.push_back(avgsimc);
         s2.push_back(scor);
     }
 
@@ -549,6 +652,9 @@ int main()
     cout<<"For globsim we have\n";
     cout<<pearson(s3,s2)<<endl;    
     cout<<spearman(s3,s2)<<endl;
+    cout<<"For avgsimc we have\n";
+    cout<<pearson(s4,s2)<<endl;    
+    cout<<spearman(s4,s2)<<endl;
 
     return 0;
 }

@@ -17,7 +17,7 @@ def GetContexts (fileName, dim):
 	with open(fileName,"r") as f:																#Read the context vectors from the file
 		for line in f:
 			numList = line.strip().split(' ')
-			if (len(numList) < dim):
+			if (len(numList) != dim):
 				continue
 			wordVector = []
 			for x in numList:
@@ -28,12 +28,20 @@ def GetContexts (fileName, dim):
 	return contextList
 
 def cluster(word, numClusters, dim): 									#Takes the word for which numClusters cluster need to be computed
-	fileName = "wordcontexts" + str(dim) + "d/" + word + ".cont"
+	fileName = ""
+	if (dim == 50):
+		fileName = "wordcontexts50d_6000(11-20)/" + word + ".cont"
+	else:
+		fileName = "wordcontexts300d_6000(11-39)/" + word + ".cont"
+	
 	contextList = GetContexts(fileName, dim)
 
-	print "INPUT CONTEXTS COMPLETE"
+	print word, len(contextList),
+	
+	if(len(contextList) < numClusters):
+		return []
 
-	clf = KMeans(n_clusters=numClusters)									#In case of normalised data points, euclidean k means is the same as spherical
+	clf = KMeans(n_clusters=numClusters, n_init=5, max_iter=50)				#In case of normalised data points, euclidean k means is the same as spherical
 	result = clf.fit_predict(contextList)									#Finds cluster centres and assigns each vector a centre
 
 	centroids = clf.cluster_centers_
@@ -44,12 +52,7 @@ def ClusterPlot (data, numClusters):
 	###############################################################################
 	# Visualize the results on PCA-reduced contextList
 
-	#reduced_data = PCA(n_components=2).fit_transform(contextList)
-
-	print "BUSY IN TSNE"
-
-	model = TSNE(n_components=2, random_state=0)
-	reduced_data = model.fit_transform(data)
+	reduced_data = PCA(n_components=2).fit_transform(data)
 
 	print "DATA REDUCED"
 
@@ -86,7 +89,8 @@ def ClusterPlot (data, numClusters):
 	            marker='x', s=169, linewidths=3,
 	            color='w', zorder=10)
 
-	labels = ['point{0}'.format(i) for i in range(len(reduced_data))]
+	#Adds labels to the plots
+	"""labels = ['point{0}'.format(i) for i in range(len(reduced_data))]
 	for label, x, y in zip(labels, reduced_data[:, 0], reduced_data[:, 1]):
 	    plt.annotate(
 	        label, 
@@ -94,6 +98,7 @@ def ClusterPlot (data, numClusters):
 	        textcoords = 'offset points', ha = 'right', va = 'bottom',
 	        bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
 	        arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+	"""
 
 	plt.title('K-means clustering on the digits dataset (PCA-reduced data)\n'
 	          'Centroids are marked with white cross')
@@ -120,13 +125,15 @@ def PlotTSNE (data, labels):										#Takes the data and the labels
 	
 	plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
 	
-	for label, x, y in zip(labels, reduced_data[:, 0], reduced_data[:, 1]):
+	#Adds labels to the plot
+	"""for label, x, y in zip(labels, reduced_data[:, 0], reduced_data[:, 1]):
 	    plt.annotate(
 	        label, 
 	        xy = (x, y), xytext = (-20, 20),
 	        textcoords = 'offset points', ha = 'right', va = 'bottom',
 	        bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
 	        arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+	"""
 
 	plt.title('TSNE Plot')
 	plt.xlim(x_min, x_max)
