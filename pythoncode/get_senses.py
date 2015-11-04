@@ -5,12 +5,13 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import scale
+from sklearn.cluster import MeanShift, estimate_bandwidth
 
 def Normalize (v):
     norm = np.sqrt(v.dot(v))
     if (norm == 0): 
-       return v
-    return v/norm
+       return v, 0
+    return (v/norm), 1
 
 def GetContexts (fileName, dim):
 	contextList = []
@@ -22,15 +23,16 @@ def GetContexts (fileName, dim):
 			wordVector = []
 			for x in numList:
 				wordVector.append(float(x))
-			wordVector = Normalize(np.array(wordVector))
-			contextList.append(wordVector)
+			wordVector, status = Normalize(np.array(wordVector))
+			if (status == 1):
+				contextList.append(wordVector)
 	contextList = np.array(contextList)
 	return contextList
 
 def cluster(word, numClusters, dim): 									#Takes the word for which numClusters cluster need to be computed
 	fileName = ""
 	if (dim == 50):
-		fileName = "wordcontexts50d_6000(11-20)/" + word + ".cont"
+		fileName = "wordcontexts50d_neelB/" + word + ".cont"
 	else:
 		fileName = "wordcontexts300d_6000(11-39)/" + word + ".cont"
 	
@@ -41,7 +43,7 @@ def cluster(word, numClusters, dim): 									#Takes the word for which numClust
 	if(len(contextList) < numClusters):
 		return []
 
-	clf = KMeans(n_clusters=numClusters, n_init=5, max_iter=50)				#In case of normalised data points, euclidean k means is the same as spherical
+	clf = KMeans(n_clusters=numClusters, n_init=10, max_iter=50)				#In case of normalised data points, euclidean k means is the same as spherical
 	result = clf.fit_predict(contextList)									#Finds cluster centres and assigns each vector a centre
 
 	centroids = clf.cluster_centers_
@@ -126,14 +128,14 @@ def PlotTSNE (data, labels):										#Takes the data and the labels
 	plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
 	
 	#Adds labels to the plot
-	"""for label, x, y in zip(labels, reduced_data[:, 0], reduced_data[:, 1]):
+	for label, x, y in zip(labels, reduced_data[:, 0], reduced_data[:, 1]):
 	    plt.annotate(
 	        label, 
 	        xy = (x, y), xytext = (-20, 20),
 	        textcoords = 'offset points', ha = 'right', va = 'bottom',
 	        bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
 	        arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
-	"""
+	
 
 	plt.title('TSNE Plot')
 	plt.xlim(x_min, x_max)

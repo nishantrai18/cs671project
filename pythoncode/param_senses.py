@@ -2,13 +2,14 @@ from get_senses import *
 from read_word import *
 
 def PrecisionLimit (num):
-	return "%.2f" % num
+	return "%.3f" % num
 
 np.set_printoptions(precision=2)															#Pretty print
 np.set_printoptions(suppress=True)
 
 #wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
-wordVec, wordID, numIDS, dim = GetWordVec("../googvecs")
+#wordVec, wordID, numIDS, dim = GetWordVec("../googvecs")
+wordVec, wordID, numIDS, dim = GetWordVec("../neel50d6K")
 
 print "GETTING WORDVECS COMPLETE"
 
@@ -30,12 +31,11 @@ for i in range(0,trimNum):
 
 numClusters = input("INPUT NUMBER OF CLUSTERS : ")
 
-fo = open("multisense/multisenses"+str(numClusters)+"n"+str(dim)+"d.vec","a")
+fo = open("multisense/multisenses"+str(numClusters)+"n"+str(dim)+"d_neelB.vec","w")
 
 cnt=0
-print multiList[2891]
 
-for w in multiList[2892:]:
+for w in multiList:
 	if (not w.isalpha()):
 		continue
 

@@ -1,0 +1,184 @@
+Past:
+- Completed implementing a non parametric version of the algorithm by neel. Compiled results using it, the results weren't very good. Mainly due to ignoring the cost function.
+- Completed code for computing the validity of the computed multi sense vectors. Using the SCWS data set.
+
+29-30 Oct:
+- Imported the code for creating contexts to python
+- Created the code for representing word vectors in 2 dimensions (Using TSNE)
+- Working on parametric clustering of the contexts (Using the non SGD approach)	(Try and see the benefits of assuming sense vectors to be cluster centres)
+
+31 Oct:
+- Ran tests to check context vector distribution
+- Completed code for parametric sense creation
+- Created conetxt vectors for 300d 3000 words
+- Computed accuracy of 50d 1000 word senses (parametric) (NO CHANGE IN RESULT, require multisense for 6000 words for considerable change)
+
+1 Nov:
+- Ran tests on the SCWS data set, got our first results (improvement) in Huang50d reps.
+- Created context vectors for 50d 6000 words.
+- Computed score for googvecs and also the 50d huang reps (require multisense for 3000+ words for considerable change)
+	- HUANG50d	(PARAMETER = 3) (6000 words)
+		For avgsim we have
+		0.316861 3.85217 0.123524 20.7552 0.152063 2.43228
+		pearson : 0.49575
+		spearman : 0.501579
+		For globsim we have
+		0.261663 3.85217 0.187796 20.7552 0.34544 2.43228
+		pearson : 0.526004
+		spearman : 0.449687
+	- HUANG50d	(PARAMETER = 3) (1000 words)
+		For avgsim we have
+		0.22652 3.85217 0.150451 20.7552 0.314865 2.43228
+		0.495599
+		0.427825
+		For globsim we have
+		0.261663 3.85217 0.187796 20.7552 0.34544 2.43228
+		0.526004
+		0.449687
+	- HUANG50d with different way of constructing contexts (6000 words)
+		For avgsim we have
+		0.302182 3.85217 0.113467 20.7552 0.148838 2.43228
+		0.51997
+		0.528201
+		For globsim we have
+		0.261663 3.85217 0.187796 20.7552 0.34544 2.43228
+		0.526004
+		0.449687
+		For avgsimc we have
+		0.0391356 3.85217 0.00488637 20.7552 0.0579204 2.43228
+		0.226837
+		0.527503
+		For locsim we have
+		0.381933 3.85217 0.278537 20.7552 0.364231 2.43228
+		0.403548
+		0.359686
+
+	//Note that the performance is poor if we consider only the top 1000 words, which means the parameter is not suited for them.
+	//Try setting higher number of parameters for the high frequency words	
+	- HUANG50d (Probably) (Algorithm, the original naive algorithm)
+		For avgsim we have
+		0.305777 3.85217 0.247109 20.7552 0.391931 2.43228
+		0.338402
+		0.305811
+		For globsim we have
+		0.261663 3.85217 0.187796 20.7552 0.34544 2.43228
+		0.526004
+		0.449687
+	- Googvecs 300d (3000 words)
+		For avgsim we have
+		0.399086 3.85217 0.232895 20.7552 0.27134 2.43228
+		0.406102
+		0.397981
+		For globsim we have
+		0.298135 3.85217 0.178566 20.7552 0.299469 2.43228
+		0.619276
+		0.614734	
+	- Googvecs 300d (6000 words)
+		For avgsim we have
+		0.593754 3.85217 0.383041 20.7552 0.174635 2.43228
+		0.284268
+		0.419487
+		For globsim we have
+		0.298135 3.85217 0.178566 20.7552 0.299469 2.43228
+		0.619276
+		0.614734
+- Decided that normal parametric method doesn't give proper sense vectors on other wordvecs. This means we should focus on only huang and neel (Since we would need to train the vectors again).	
+		
+3 Nov:
+- Implemented the AVGSimC metric, gives better performance (in general and in all evaluations)
+- Completed new way to compute context vectors, involves giving higher preference to those with higher similarity 	
+
+4 Nov:
+- Extracted neel global vectors, constructed context vectors using them and method B
+- Implemented local Sim metric
+- Computed results for parametric clustering on neel vectors.
+	- Neel 50d 6000 words	(Method B)
+		For avgsim we have
+		0.581257 3.85217 0.362688 20.7552 0.157569 2.43228
+		0.421962
+		0.533347
+		For globsim we have
+		0.415327 3.85217 0.274179 20.7552 0.318876 2.43228
+		0.637675
+		0.623132
+		For avgsimc we have
+		0.0714454 3.85217 0.00847897 20.7552 0.0580906 2.43228
+		0.217397
+		0.566431
+		For locsim we have
+		0.634696 3.85217 0.47401 20.7552 0.26678 2.43228
+		0.400973
+		0.404591
+	
+To discuss:
+
+- Decent results but huge room for improvement.
+- Permutation of word word coocurrence matrix, using cuthill-mckee algorithm. Don't have an idea of how to interpret the results.				(Nothing further)
+- For parametric clustering, trying algorithms which give uneven cluster size. Models real life polysemy						(Means shift algorithm)			
+- Till now ignoring the function needed to be optimised. Use it by making the update using GD.
+- Instead of a GD update, we try to incorporate it in our clustering approach. We choose a parameter which gives the best value of function. (Paramter estimation)
+- Different senses approach, if our clustering algorithm is reliable, then for each word estimate the number of clusters using an approach similar to the previous one.
+- Problems, the space of the context vectors seems quite random. Much less structure than word vectors.
+- To tackle such problems, we looked at a paper for paragraph vectors (hoping it would also create phrase/context vectors) 
+- Another possible approach involves marking the words as distinct senses and then train the vectors again on it (Gives good results) (The problem in this case becomes efficient WSD)
+
+Todo:
+
+- Create contexts for 300d 3000 words (Using googvecs)		(DONE)
+- Create multiple sense vectors using them		(DONE)
+- Compute scores for the googvec multisenses	
+	- Googvecs 300d (3000 words)
+		For avgsim we have
+		0.399086 3.85217 0.232895 20.7552 0.27134 2.43228
+		0.406102
+		0.397981
+		For globsim we have
+		0.298135 3.85217 0.178566 20.7552 0.299469 2.43228
+		0.619276
+		0.614734	
+	- Googvecs 300d (6000 words)
+		For avgsim we have
+		0.593754 3.85217 0.383041 20.7552 0.174635 2.43228
+		0.284268
+		0.419487
+		For globsim we have
+		0.298135 3.85217 0.178566 20.7552 0.299469 2.43228
+		0.619276
+		0.614734
+		For avgsimc we have
+		0.0731035 3.85217 0.00842734 20.7552 0.0555267 2.43228
+		0.155933
+		0.429781
+
+- Compute AvgSimC metric 
+	- HUANG50d	(PARAMETER = 3) (6000 words)
+		For avgsimc we have					(Linear probabilities)
+		0.0403962 3.85217 0.00496027 20.7552 0.0576925 2.43228
+		0.219522
+		0.502927
+		For avgsimc we have					(Inverse of cosine distance)
+		0.0407505 3.85217 0.00500621 20.7552 0.0578411 2.43228
+		0.222036
+		0.505421
+	- HUANG50d with different way of constructing contexts
+		For avgsim we have
+		0.302182 3.85217 0.113467 20.7552 0.148838 2.43228
+		0.51997
+		0.528201
+		For globsim we have
+		0.261663 3.85217 0.187796 20.7552 0.34544 2.43228
+		0.526004
+		0.449687
+		For avgsimc we have
+		0.0391356 3.85217 0.00488637 20.7552 0.0579204 2.43228
+		0.226837
+		0.527503
+		For locsim we have
+		0.381933 3.85217 0.278537 20.7552 0.364231 2.43228
+		0.403548
+		0.359686
+
+
+
+
+- Start coding up parameter estimation using the cost estimation

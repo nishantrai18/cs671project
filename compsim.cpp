@@ -309,6 +309,59 @@ double AVGSimC(string w1, vector <double> c1, string w2, vector <double> c2)
     return (scor/(i*j*(1.0)));        
 }
 
+double LocSim(string w1, vector <double> c1, string w2, vector <double> c2)
+{
+    int i,j,t;
+    senseList s1, s2;
+    
+    if(multisense.find(w1)==multisense.end())
+    {
+        cout<<"NOT FOUND";
+        sense tmp;
+        if(wordvec.find(w1)==wordvec.end())
+            tmp.center = wordvec["UUUNKKK"];
+        else
+            tmp.center = wordvec[w1];
+        s1.senses.push_back(tmp);
+    }
+    else
+        s1 = multisense[w1];
+    if(multisense.find(w2)==multisense.end())
+    {
+        cout<<"NOT FOUND";
+        sense tmp;
+        if(wordvec.find(w2)==wordvec.end())
+            tmp.center = wordvec["UUUNKKK"];
+        else
+            tmp.center = wordvec[w2];
+        s2.senses.push_back(tmp);
+    }
+    else
+        s2 = multisense[w2];
+    double scor=0;
+    vector <double> prob1, prob2;
+    cout<<"SOME1\n";
+    ComputeProb(c1,s1,prob1);
+    cout<<"SOME2\n";
+    ComputeProb(c2,s2,prob2);
+    int mi = 0, mj = 0;
+    double mp = 0;
+    for(i=0;i<s1.senses.size();i++)
+        if (prob1[i] > mp)
+        {
+            mp = prob1[i];
+            mi = i;
+        }
+    mp = 0;
+    for(j=0;j<s2.senses.size();j++)
+        if (prob1[j] > mp)
+        {
+            mp = prob1[j];
+            mj = j;
+        }
+    return similarity(s1.senses[mi].center,s2.senses[mj].center);        
+}
+
 double pearson(vector <double> s1, vector <double> s2)
 {
     double ma=0,mb=0,sa=0,sb=0,va=0,vb=0,mab=0,cnt=0;
@@ -382,8 +435,10 @@ int main()
     FILE* fi;
 
     //FILE* fn = fopen("multisenses3","r");                                                                       //INPUT MULTISENSE VECTORS
-    FILE* fn = fopen("server_data/multisenses3n300d_goog6000.vec","r");                                                                       //INPUT MULTISENSE VECTORS
+    //FILE* fn = fopen("server_data/multisenses3n300d_goog6000.vec","r");                                                                       //INPUT MULTISENSE VECTORS
     //FILE* fn = fopen("server_data/multisenses3n50d_huang6000.vec","r");
+    //FILE* fn = fopen("server_data/multisenses3n50d_huangB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
+    FILE* fn = fopen("server_data/multisenses3n50d_neelB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
     while(!feof(fn))
     {
         char str[110];
@@ -413,7 +468,8 @@ int main()
 
     //fi = fopen("npmssr50d.txt","r");
     //fi = fopen("huang50rep","r");
-    fi = fopen("googvecs","r");
+    fi = fopen("neel50d6K","r");
+    //fi = fopen("googvecs","r");
     
     cout<<"SUCCESS\n";
 
@@ -581,7 +637,7 @@ int main()
     cout<<"SUCCESS, total words are : "<<totalWords<<"\n";
     cout<<"Sentences are "<<cnt<<endl;
 
-    vector <double> s1, s2, s3, s4;
+    vector <double> s1, s2, s3, s4, s5;
     
     for(i=0;i<sent.size()-1;i++)
     {
@@ -636,25 +692,30 @@ int main()
         //printer(contexts[0]);
         //printer(contexts[1]);
         double avgsimc = AVGSimC(target[0],contexts[0],target[1],contexts[1]);
+        double locsim = LocSim(target[0],contexts[0],target[1],contexts[1]);
         j = sent[i].size()-11;
         //cout<<sent[i][j]<<endl;
         double scor = atof(sent[i][j].c_str());
         cout<<avgsim<<","<<globsim<<","<<avgsimc<<":"<<scor<<"\n";
-        s1.push_back(avgsim);
+        s2.push_back(avgsim);
         s3.push_back(globsim);
         s4.push_back(avgsimc);
-        s2.push_back(scor);
+        s5.push_back(locsim);
+        s1.push_back(scor);
     }
 
     cout<<"For avgsim we have\n";
-    cout<<pearson(s1,s2)<<endl;    
-    cout<<spearman(s1,s2)<<endl;
+    cout<<pearson(s2,s1)<<endl;    
+    cout<<spearman(s2,s1)<<endl;
     cout<<"For globsim we have\n";
-    cout<<pearson(s3,s2)<<endl;    
-    cout<<spearman(s3,s2)<<endl;
+    cout<<pearson(s3,s1)<<endl;    
+    cout<<spearman(s3,s1)<<endl;
     cout<<"For avgsimc we have\n";
-    cout<<pearson(s4,s2)<<endl;    
-    cout<<spearman(s4,s2)<<endl;
+    cout<<pearson(s4,s1)<<endl;    
+    cout<<spearman(s4,s1)<<endl;
+    cout<<"For locsim we have\n";
+    cout<<pearson(s5,s1)<<endl;    
+    cout<<spearman(s5,s1)<<endl;
 
     return 0;
 }
