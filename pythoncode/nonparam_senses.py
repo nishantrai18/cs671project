@@ -17,6 +17,10 @@ print "GETTING STOPWORDS COMPLETE"														#Getting list of stopwords
 
 wordFreq = GetWordFile("../vocab.txt", stopWords)					#Getting words in order of word frequency
 
+wordDist = GetFreqFile("../wordfreq.txt")							#Get the frequencies of a word
+maxSize = 5000000
+noisyWords = GetNoisyList (wordDist, maxSize)
+
 tfidf = {}
 validWords = set(wordID)&set(wordFreq)								#Create set of valid words
 
@@ -27,9 +31,7 @@ for i in range(0,trimNum):
 	if (wordFreq[i] in validWords):
 		multiList.append(wordFreq[i])
 
-numClusters = input("INPUT NUMBER OF CLUSTERS : ")
-
-fo = open("multisense/multisenses"+str(numClusters)+"n"+str(dim)+"d_huanglargeB.vec","w")
+fo = open("multisense/npmultisenses"+str(dim)+"d_huangB.vec","w")
 
 cnt=0
 
@@ -42,7 +44,7 @@ for w in multiList:
 	print " :: ",cnt,w, 
 	cnt+=1
 
-	senses = cluster(w, numClusters, dim)
+	senses = NonParCluster(w, dim, noisyWords, wordVec, wordID)
 	fo.write(w + " " + str(len(senses)) + " " + str(dim) + "\n")
 	for i in range(0,len(senses)):
 		fo.write(str(i) + "\n")

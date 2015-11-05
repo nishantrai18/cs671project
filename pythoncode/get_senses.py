@@ -34,7 +34,7 @@ def GetContexts (fileName, dim):
 def cluster(word, numClusters, dim): 									#Takes the word for which numClusters cluster need to be computed
 	fileName = ""
 	if (dim == 50):
-		fileName = "wordcontexts50d_huanglargeB/" + word + ".cont"
+		fileName = "wordcontexts50d_huangB/" + word + ".cont"
 	else:
 		fileName = "wordcontexts300d_6000(11-39)/" + word + ".cont"
 	
@@ -51,6 +51,21 @@ def cluster(word, numClusters, dim): 									#Takes the word for which numClust
 	centroids = clf.cluster_centers_
 
 	return centroids
+
+def NonParCluster(word, dim, noisyWords, wordVec, wordID): 									#Computes a clustering after estimating the number of clusters
+	fileName = "goodwords50d_huangB/" + word + ".winwords"
+	
+	contextList = GetContexts(fileName, dim)
+
+	print len(contextList),":",
+	
+	optK = OptimalCluster(word, contextList, dim, noisyWords, wordVec, wordID)
+	
+	print optK
+
+	if (optK == 0):
+		return []
+	return cluster(word, optK, dim)
 
 def GetValidationContexts (fileName, dim):
 	validationList = []
@@ -73,21 +88,22 @@ def GetValidationContexts (fileName, dim):
 				validationList.append((goodWords, wordVector))
 	return validationList
 
+#Presently finding the optimal on a reduced subset of contexts
+
 def OptimalCluster(word, contextList, dim, noisyWords, wordVec, wordID): 						#Takes the word for which optimal clusters need to be computed
 																								#Does it on the basis of a function to be optimised
-	fileName = "testing/"+word+".winwords"
+	fileName = "goodwords50d_huangB/"+word+".winwords"
 	candK = []
 	for x in range(1,10):
 		candK.append(x)
-
 
 	maxEstimate = -1000000000
 	optK = 0
 	validationList = GetValidationContexts(fileName, dim)
 
-	print word, len(validationList)
-
 	for numClusters in candK:
+		if (len(contextList) < numClusters):
+			continue
 		clf = KMeans(n_clusters=numClusters, n_init=5, max_iter=35)					#In case of normalised data points, euclidean k means is the same as spherical
 		result = clf.fit_predict(contextList)										#Finds cluster centres and assigns each vector a centre
 		centroids = clf.cluster_centers_
@@ -96,7 +112,7 @@ def OptimalCluster(word, contextList, dim, noisyWords, wordVec, wordID): 						#
 
 		change = ((estimate - maxEstimate)/abs(maxEstimate))
 		print "%.4f" % change,
-		if (change < (0.005)):
+		if (change < (0.005)):																			#Change the hyperparameter here
 			break
 
 		maxEstimate = estimate
