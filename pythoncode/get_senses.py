@@ -44,7 +44,7 @@ def cluster(word, numClusters, dim): 									#Takes the word for which numClust
 		return []
 
 	clf = KMeans(n_clusters=numClusters, n_init=10, max_iter=75)				#In case of normalised data points, euclidean k means is the same as spherical
-	result = clf.fit_predict(contextList)									#Finds cluster centres and assigns each vector a centre
+	result = clf.fit_predict(contextList)										#Finds cluster centres and assigns each vector a centre
 
 	centroids = clf.cluster_centers_
 

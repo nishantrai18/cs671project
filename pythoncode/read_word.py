@@ -53,6 +53,7 @@ def GetMultiWordVec(fileName):																#Takes fileName, returns dict of w
 	numWord = 0
 	dim = 0
 	currentSense = 0
+	word = ""
 
 	with open(fileName,"r") as f:																#Read the word vectors from the file
 		for line in f:
@@ -60,13 +61,13 @@ def GetMultiWordVec(fileName):																#Takes fileName, returns dict of w
 			if (len(wordList) <= 1):
 				currentSense = int(wordList[0])
 			elif (len(wordList) <= 3):
-				numWord, numSenses, dim = int(wordList[0]),int(wordList[1]),int(wordList[2])
-				wordVec[wordID[word]] = []
-				currentSense = 0
-			else:
+				word, numSenses, dim = wordList[0],int(wordList[1]),int(wordList[2])
 				wordID[word] = numIDS
 				invID[numIDS] = word
 				numIDS += 1
+				wordVec[wordID[word]] = []
+				currentSense = 0
+			else:
 				wordVector = []
 				for x in range(0, dim):
 					y = float(wordList[x])

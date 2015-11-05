@@ -1,8 +1,6 @@
 from get_senses import *
 from read_word import *
-
-def PrecisionLimit (num):
-	return "%.3f" % num
+from make_cont import PrecisionLimit
 
 np.set_printoptions(precision=2)															#Pretty print
 np.set_printoptions(suppress=True)

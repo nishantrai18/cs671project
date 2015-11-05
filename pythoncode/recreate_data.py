@@ -3,21 +3,25 @@ import math
 
 from read_word import *
 from get_senses import *
-from param_sense import *
+from create_contexts import *
 
-def AssignCluster(wordVector, multiWordVector):
-	ID = 0
-	maxSim = 0
-	for i in range(0,len(multiWordVector)):
-		tmp = CosineSimilarity(wordVector, multiWordVector[i])
-		if (tmp > maxSim):
-			maxSim = tmp
-			ID = i
-	return ID
+def AssignCluster(word, wordVector, multiWordVec, multiWordID):
+	if word in multiWordID:
+		multiWordVector = multiWordVec[multiWordID[word]]
+		ID = 0
+		maxSim = 0
+		for i in range(0,len(multiWordVector)):
+			tmp = CosineSimilarity(wordVector, multiWordVector[i])
+			if (tmp > maxSim):
+				maxSim = tmp
+				ID = i
+		return ID
+	else:
+		return -1
 
 wordVec, wordID, numIDS, dim = GetWordVec("../neel50d6K")
 
-multiWordVec, multiWordID, multiNumIDS, dim = GetMultiWordVec("../neel50d6K")	
+multiWordVec, multiWordID, multiNumIDS, dim = GetMultiWordVec("multisense/multisenses3n50d_neelB.vec")	
 
 print "INPUT WORD VECTORS/ MULTISENSE VECTORS COMPLETE"
 
@@ -78,16 +82,15 @@ i = 0																		#Starting point
 
 window = 5
 
-for m in range(11,39):
+for m in range(11,12):
 	fileName = "../testfiles_sm/tf00"+str(m)
 	newFileName = "../trainfiles_neel6K/tf00"+str(m)
 
 	fw = open(newFileName, "w")
 
 	print fileName, newFileName
-	MakeContextVec(fileName, wordVec, dim, wordID, validWords, tfidf, stopWords, simWords, selWords, window, fileList)
-
-	with open(fileName,"r") as fileName:																				#Read the word vectors from the file
+	
+	with open(fileName,"r") as f:																						#Read the word vectors from the file
 		for line in f:
 			sentence = line.strip().split(' ')																			#Get a list of words
 			cleanSentence = []
@@ -95,17 +98,18 @@ for m in range(11,39):
 				cleanSentence.append(CleanWord(sentence[i]))
 			for i in range (0, len(cleanSentence)):
 				if (cleanSentence[i] in multiList):																		#If current word is in the context list
-					wordVector = ConstructContextVec(cleanSentence, i, window, dim, validWords, tfidf, stopwords)								
+					wordVector = ConstructContextVec(cleanSentence, i, window, dim, wordVec, wordID, validWords, tfidf, stopWords)								
 					if (wordVector.dot(wordVector) > 0):
 						wordVector, status = Normalize(wordVector)
 						if (status == 0):
 							continue
-						clusterID = AssignCluster(wordVector, multiWordVec[multiWordID[cleanSentence[i]]])
-						sentence[i] = cleanSentence[i] + "_" + str(clusterID)		
+						clusterID = AssignCluster(cleanSentence[i], wordVector, multiWordVec, multiWordID)
+						if (clusterID >= 0):
+							sentence[i] = cleanSentence[i] + "_" + str(clusterID)		
 			for k in range(0,len(sentence)):
 				fw.write(sentence[k]+" ")
 			fw.write("\n")			
-	
+
 	print m, "IS DONE",
 	if(m%3==0):
 		print "\n",

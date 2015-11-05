@@ -3,69 +3,7 @@ import math
 
 from read_word import *
 from get_senses import *
-
-def PrecisionLimit (num):
-	return "%.3f" % num
-
-def CleanWord (word):
-	symbols = [',','\"',"\'",".","?","/","(",")"]
-	for c in symbols:
-		word = word.replace(c,'')
-	return word.lower()
-
-def sigmoid(x):
-	return 1 / (1 + math.exp(-x))
-
-def CosineSimilarity (vecA, vecB):
-	dot = vecA.dot(vecB)
-	normA = np.sqrt(vecA.dot(vecA))
-	normB = np.sqrt(vecB.dot(vecB))
-	similarity = (dot/(normA*normB))
-
-def sim (wA, wB, wordVec, wordID):									#Gives the cosine similarity
-	vecA = wordVec[wordID[wA]]
-	vecB = wordVec[wordID[wB]]
-	similarity = CosineSimilarity(vecA, vecB)
-	return sigmoid(similarity)
-
-def ConstructContextVec (sentence, position, window, dim, validWords, tfidf, stopWords):
-	wordVector = np.zeros(dim)								
-	for j in range(position-window, position+window):
-		if (j < 0):
-			j = -1
-		elif (j >= len(sentence)):
-			break
-		elif (j == position):
-			continue
-		elif (sentence[j] in validWords):											#Checks if present in vocabulary
-			if(sentence[j] not in stopWords):
-				if (tfidf[sentence[j]] > 0):
-					wordVector = wordVector + \
-					(tfidf[sentence[j]]*sim(sentence[position], sentence[j], wordVec, wordID))*wordVec[wordID[sentence[j]]]					
-																			#Change here to alter the construction of context vectors
-	return wordVector
-
-def MakeContextVec (fileName, wordVec, dim, wordID,  											
-					validWords, tfidf, stopWords, simWords,										
-					selWords, window, fileList):												#tfidf's, words to be considered as input
-																								#simWords is a dictionary with similarities
-																								#window is the length considered to the left and right
-																								#vocabID is the vocabulary integer mapping 
-	with open(fileName,"r") as f:																#Read the word vectors from the file
-		for line in f:
-			sentence = line.strip().split(' ')													#Get a list of words
-			for i in range(0, len(sentence)):
-				sentence[i] = CleanWord(sentence[i])
-			for i in range (0, len(sentence)):
-				if (sentence[i] in selWords):													#If current word is in the context list
-					wordVector = ConstructContextVec(sentence, i, window, dim, validWords, stopwords)								
-					if (wordVector.dot(wordVector) > 0):
-						wordVector, status = Normalize(wordVector)
-						if (status == 0):
-							continue
-						for k in range(0,len(wordVector)):
-							fileList[sentence[i]].write(str(PrecisionLimit(wordVector[k]))+" ")
-						fileList[sentence[i]].write("\n")
+from create_contexts import *
 
 wordVec = {}																		#Takes integer as argument and maps it to a word vector
 wordID = {}																			#Takes a word and maps it to an id 
