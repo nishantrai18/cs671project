@@ -16,14 +16,34 @@ def CleanWord (word):
 def sigmoid(x):
 	return 1 / (1 + math.exp(-x))
 
-def sim (wA, wB, wordVec, wordID):									#Gives the cosine similarity
-	vecA = wordVec[wordID[wA]]
-	vecB = wordVec[wordID[wB]]
+def CosineSimilarity (vecA, vecB):
 	dot = vecA.dot(vecB)
 	normA = np.sqrt(vecA.dot(vecA))
 	normB = np.sqrt(vecB.dot(vecB))
 	similarity = (dot/(normA*normB))
+
+def sim (wA, wB, wordVec, wordID):									#Gives the cosine similarity
+	vecA = wordVec[wordID[wA]]
+	vecB = wordVec[wordID[wB]]
+	similarity = CosineSimilarity(vecA, vecB)
 	return sigmoid(similarity)
+
+def ConstructContextVec (sentence, position, window, dim, validWords, tfidf, stopWords):
+	wordVector = np.zeros(dim)								
+	for j in range(position-window, position+window):
+		if (j < 0):
+			j = -1
+		elif (j >= len(sentence)):
+			break
+		elif (j == position):
+			continue
+		elif (sentence[j] in validWords):											#Checks if present in vocabulary
+			if(sentence[j] not in stopWords):
+				if (tfidf[sentence[j]] > 0):
+					wordVector = wordVector + \
+					(tfidf[sentence[j]]*sim(sentence[position], sentence[j], wordVec, wordID))*wordVec[wordID[sentence[j]]]					
+																			#Change here to alter the construction of context vectors
+	return wordVector
 
 def MakeContextVec (fileName, wordVec, dim, wordID,  											
 					validWords, tfidf, stopWords, simWords,										
@@ -36,25 +56,9 @@ def MakeContextVec (fileName, wordVec, dim, wordID,
 			sentence = line.strip().split(' ')													#Get a list of words
 			for i in range(0, len(sentence)):
 				sentence[i] = CleanWord(sentence[i])
-
 			for i in range (0, len(sentence)):
 				if (sentence[i] in selWords):													#If current word is in the context list
-					wordVector = np.zeros(dim)								
-					for j in range(i-window, i+window):
-						if (j < 0):
-							j = -1
-						elif (j >= len(sentence)):
-							break
-						elif (j == i):
-							continue
-						elif (sentence[j] in validWords):											#Checks if present in vocabulary
-							if(sentence[j] not in stopWords):
-								if (tfidf[sentence[j]] > 0):
-									#print (tfidf[sentence[j]])
-									#print (wordVec[wordID[sentence[j]]])
-									wordVector = wordVector + \
-									(tfidf[sentence[j]]*sim(sentence[i], sentence[j], wordVec, wordID))*wordVec[wordID[sentence[j]]]					
-																							#Change here to alter the construction of context vectors
+					wordVector = ConstructContextVec(sentence, i, window, dim, validWords, stopwords)								
 					if (wordVector.dot(wordVector) > 0):
 						wordVector, status = Normalize(wordVector)
 						if (status == 0):
@@ -91,6 +95,8 @@ with open("../tfidf.txt","r") as f:																#Get the tfidf of words
 			break
 		tfidf[wordFreq[cnt]] = float(tfid)
 		cnt += 1
+
+raw_input("ARE YOU SURE YOU WANT TO CONSTRUCT CONTEXT VECTORS (Y/N) : ")
 
 print "GETTING TFIDF COMPLETE"														#Getting list of stopwords	
 

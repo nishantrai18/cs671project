@@ -7,9 +7,9 @@ def PrecisionLimit (num):
 np.set_printoptions(precision=2)															#Pretty print
 np.set_printoptions(suppress=True)
 
-#wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
+wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
 #wordVec, wordID, numIDS, dim = GetWordVec("../googvecs")
-wordVec, wordID, numIDS, dim = GetWordVec("../neel50d6K")
+#wordVec, wordID, numIDS, dim = GetWordVec("../neel50d6K")
 
 print "GETTING WORDVECS COMPLETE"
 
@@ -31,7 +31,7 @@ for i in range(0,trimNum):
 
 numClusters = input("INPUT NUMBER OF CLUSTERS : ")
 
-fo = open("multisense/multisenses"+str(numClusters)+"n"+str(dim)+"d_neelB.vec","w")
+fo = open("multisense/multisenses"+str(numClusters)+"n"+str(dim)+"d_huanglargeB.vec","w")
 
 cnt=0
 
