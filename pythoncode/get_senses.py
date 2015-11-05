@@ -50,6 +50,83 @@ def cluster(word, numClusters, dim): 									#Takes the word for which numClust
 
 	return centroids
 
+#Read random words from a file (Same for all words) and store in dictionary. Format is
+#<word> <count>
+#This dictionary will be global
+#### WHY NOT CONSTRUCT THE FILE PURELY ON THE BASIS OF THE DISTRIBUTION###############
+
+#Read good words from file containing data in format
+#<numgwords> <gw1> <gw2> ..... <gwn>
+#<wordvector line containing dim lines>
+#Assign cluster to each word vector
+#Keep list of cluster dictionaries with counts of good words
+#Finally compute score (softmax) to get a value. 
+#For negative sampling, divide the original corpus into k equal parts
+#Also try doing actually negative sampled things. (Depending on the time taken)
+
+def GetEstimate (word, clusters, dim, noisyWords, wordVec, wordID):					#Takes the target word, clusters represent lists numClusters cluster centers
+																					#noisyWords is a dictionary containing count of the noisy words.
+																					#AT THE MOMENT IT IS A LIST OF ALL NOISY WORDS
+																					#Wordvec is used to get the word vector during estimation
+	numClusters = len(clusters)
+	goodWordCount = []
+	noisyWordCount = []
+	for i in range(0,numClusters):
+		tmpA = {}
+		goodWordCount.append(tmpA)
+		tmpB = {}
+		noisyWordCount.append(tmpB)
+	
+	negativeSampleSize = 2
+	numWords = 0
+	goodWords = []
+	cnt = 0
+
+	with open(fileName,"r") as f:																#Read the context vectors from the file
+		for line in f:
+			numList = line.strip().split(' ')
+			if (len(numList) < dim):
+				if (numList[0].isdigit()):														#Check if it is a valid line
+					numWords = int(numList[0])
+					goodWords = []
+					for i in range(0,len(numList)):
+						goodWords.append(numList[i]) 
+					goodWords = set(goodWords)	
+			elif (len(numList) == dim):															
+				wordVector = []
+				for x in numList:
+					wordVector.append(float(x))	
+				wordVector, status = Normalize(np.array(wordVector))							#First read the word vector
+				if (status == 0):
+					continue
+				clusterID = AssignCluster(wordVector, clusters)									#Get the actual cluster of the word
+				for x in goodWords:																#Increment the good word count
+					if (x not in goodWordCount[clusterID]):
+						goodWordCount[clusterID][x] = 1 										
+					else
+						goodWordCount[clusterID][x] += 1
+				status = 0
+				while (status < (len(goodWords)*negativeSampleSize)):							#Negative sampling of the word
+					if (noisyWords[cnt] not in goodWords):
+						if (noisyWords[cnt] not in noisyWordCount[clusterID]):
+							noisyWordCount[clusterID][noisyWords[cnt]] = 1
+						else
+							noisyWordCount[clusterID][noisyWords[cnt]] += 1
+						status += 1
+					cnt = (cnt + 1)%len(noisyWords)
+
+	expGood = 0																					#Computation of the cost function
+	expNoisy = 0
+	for i in range(0,len(clusters)):
+		for k in goodWordCount[i].keys():
+			expGood += (sigmoid(clusters[i].dot(wordVec[wordID[k]]))*goodWordCount[i][k])
+	for i in range(0,len(clusters)):
+		for k in noisyWordCount[i].keys():
+			expNoisy += (sigmoid(-clusters[i].dot(wordVec[wordID[k]]))*noisyWordCount[i][k])
+
+	return expNoisy + expGood
+
+
 def ClusterPlot (data, numClusters):
 	###############################################################################
 	# Visualize the results on PCA-reduced contextList

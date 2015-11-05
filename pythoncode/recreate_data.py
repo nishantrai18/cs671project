@@ -5,20 +5,6 @@ from read_word import *
 from get_senses import *
 from create_contexts import *
 
-def AssignCluster(word, wordVector, multiWordVec, multiWordID):
-	if word in multiWordID:
-		multiWordVector = multiWordVec[multiWordID[word]]
-		ID = 0
-		maxSim = 0
-		for i in range(0,len(multiWordVector)):
-			tmp = CosineSimilarity(wordVector, multiWordVector[i])
-			if (tmp > maxSim):
-				maxSim = tmp
-				ID = i
-		return ID
-	else:
-		return -1
-
 wordVec, wordID, numIDS, dim = GetWordVec("../neel50d6K")
 
 multiWordVec, multiWordID, multiNumIDS, dim = GetMultiWordVec("multisense/multisenses3n50d_neelB.vec")	
@@ -103,7 +89,9 @@ for m in range(11,12):
 						wordVector, status = Normalize(wordVector)
 						if (status == 0):
 							continue
-						clusterID = AssignCluster(cleanSentence[i], wordVector, multiWordVec, multiWordID)
+						clusterID = -1
+						if word in multiWordID:
+							clusterID = AssignCluster(wordVector, multiWordVec[multiWordID[cleanSentence[i]]])
 						if (clusterID >= 0):
 							sentence[i] = cleanSentence[i] + "_" + str(clusterID)		
 			for k in range(0,len(sentence)):
