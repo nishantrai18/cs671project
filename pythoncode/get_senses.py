@@ -7,6 +7,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import scale
 from sklearn.cluster import MeanShift, estimate_bandwidth
 
+from create_contexts import *
+
 def Normalize (v):
     norm = np.sqrt(v.dot(v))
     if (norm == 0): 
@@ -50,6 +52,59 @@ def cluster(word, numClusters, dim): 									#Takes the word for which numClust
 
 	return centroids
 
+def GetValidationContexts (fileName, dim):
+	validationList = []
+	goodWords = []
+	with open(fileName,"r") as f:																#Read the context vectors from the file
+		for line in f:
+			numList = line.strip().split(' ')
+			if (len(numList) < dim):
+				if (numList[0].isdigit()):														#Check if it is a valid line
+					numWords = int(numList[0])
+					goodWords = numList[1:]
+					goodWords = set(goodWords)	
+			elif (len(numList) == dim):															
+				wordVector = []
+				for x in numList:
+					wordVector.append(float(x))	
+				wordVector, status = Normalize(np.array(wordVector))							#First read the word vector
+				if (status == 0):
+					continue
+				validationList.append((goodWords, wordVector))
+	return validationList
+
+def OptimalCluster(word, contextList, dim, noisyWords, wordVec, wordID): 						#Takes the word for which optimal clusters need to be computed
+																								#Does it on the basis of a function to be optimised
+	fileName = "testing/"+word+".winwords"
+	candK = []
+	for x in range(1,10):
+		candK.append(x)
+
+
+	maxEstimate = -1000000000
+	optK = 0
+	validationList = GetValidationContexts(fileName, dim)
+
+	print word, len(validationList)
+
+	for numClusters in candK:
+		clf = KMeans(n_clusters=numClusters, n_init=5, max_iter=35)					#In case of normalised data points, euclidean k means is the same as spherical
+		result = clf.fit_predict(contextList)										#Finds cluster centres and assigns each vector a centre
+		centroids = clf.cluster_centers_
+		estimate = GetEstimate (word, centroids, validationList, dim, noisyWords, wordVec, wordID)
+		print "%.4f" % estimate,
+
+		change = ((estimate - maxEstimate)/abs(maxEstimate))
+		print "%.4f" % change,
+		if (change < (0.005)):
+			break
+
+		maxEstimate = estimate
+		optK = numClusters
+
+	return optK
+
+
 #Read random words from a file (Same for all words) and store in dictionary. Format is
 #<word> <count>
 #This dictionary will be global
@@ -64,65 +119,47 @@ def cluster(word, numClusters, dim): 									#Takes the word for which numClust
 #For negative sampling, divide the original corpus into k equal parts
 #Also try doing actually negative sampled things. (Depending on the time taken)
 
-def GetEstimate (word, clusters, dim, noisyWords, wordVec, wordID):					#Takes the target word, clusters represent lists numClusters cluster centers
+def GetEstimate (word, clusters, validationList, dim, noisyWords, wordVec, wordID):	#Takes the target word, clusters represent lists numClusters cluster centers
+																					#ValidationList is a list of the contexts and good words
 																					#noisyWords is a dictionary containing count of the noisy words.
 																					#AT THE MOMENT IT IS A LIST OF ALL NOISY WORDS
 																					#Wordvec is used to get the word vector during estimation
 	numClusters = len(clusters)
-	goodWordCount = []
-	noisyWordCount = []
-	for i in range(0,numClusters):
-		tmpA = {}
-		goodWordCount.append(tmpA)
-		tmpB = {}
-		noisyWordCount.append(tmpB)
+	goodWordCount = [dict() for x in range(numClusters)]
+	noisyWordCount = [dict() for x in range(numClusters)]
 	
 	negativeSampleSize = 2
 	numWords = 0
 	goodWords = []
 	cnt = 0
 
-	with open(fileName,"r") as f:																#Read the context vectors from the file
-		for line in f:
-			numList = line.strip().split(' ')
-			if (len(numList) < dim):
-				if (numList[0].isdigit()):														#Check if it is a valid line
-					numWords = int(numList[0])
-					goodWords = []
-					for i in range(0,len(numList)):
-						goodWords.append(numList[i]) 
-					goodWords = set(goodWords)	
-			elif (len(numList) == dim):															
-				wordVector = []
-				for x in numList:
-					wordVector.append(float(x))	
-				wordVector, status = Normalize(np.array(wordVector))							#First read the word vector
-				if (status == 0):
-					continue
-				clusterID = AssignCluster(wordVector, clusters)									#Get the actual cluster of the word
-				for x in goodWords:																#Increment the good word count
-					if (x not in goodWordCount[clusterID]):
-						goodWordCount[clusterID][x] = 1 										
-					else
-						goodWordCount[clusterID][x] += 1
-				status = 0
-				while (status < (len(goodWords)*negativeSampleSize)):							#Negative sampling of the word
-					if (noisyWords[cnt] not in goodWords):
-						if (noisyWords[cnt] not in noisyWordCount[clusterID]):
-							noisyWordCount[clusterID][noisyWords[cnt]] = 1
-						else
-							noisyWordCount[clusterID][noisyWords[cnt]] += 1
-						status += 1
-					cnt = (cnt + 1)%len(noisyWords)
+	for i in validationList:
+		wordVector = i[1]
+		goodWords = i[0]
+		clusterID = AssignCluster(wordVector, clusters)									#Get the actual cluster of the word
+		for x in goodWords:																#Increment the good word count
+			if (x not in goodWordCount[clusterID]):
+				goodWordCount[clusterID][x] = 1 										
+			else:
+				goodWordCount[clusterID][x] += 1
+		status = 0
+		while (status < (len(goodWords)*negativeSampleSize)):							#Negative sampling of the word
+			if (noisyWords[cnt] not in goodWords):
+				if (noisyWords[cnt] not in noisyWordCount[clusterID]):
+					noisyWordCount[clusterID][noisyWords[cnt]] = 1
+				else:
+					noisyWordCount[clusterID][noisyWords[cnt]] += 1
+				status += 1
+			cnt = (cnt + 1)%len(noisyWords)
 
 	expGood = 0																					#Computation of the cost function
 	expNoisy = 0
 	for i in range(0,len(clusters)):
 		for k in goodWordCount[i].keys():
-			expGood += (sigmoid(clusters[i].dot(wordVec[wordID[k]]))*goodWordCount[i][k])
+			expGood += np.log(sigmoid(clusters[i].dot(wordVec[wordID[k]])))*goodWordCount[i][k]
 	for i in range(0,len(clusters)):
 		for k in noisyWordCount[i].keys():
-			expNoisy += (sigmoid(-clusters[i].dot(wordVec[wordID[k]]))*noisyWordCount[i][k])
+			expNoisy += np.log(sigmoid(-clusters[i].dot(wordVec[wordID[k]])))*noisyWordCount[i][k]
 
 	return expNoisy + expGood
 

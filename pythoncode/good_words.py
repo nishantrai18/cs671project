@@ -11,16 +11,18 @@ numIDS = {}																			#Inverse mapping for wordVec
 dim = 0
 
 #wordVec, wordID, numIDS, dim = GetWordVec("../googvecs")
-#wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
-wordVec, wordID, numIDS, dim = GetWordVec("../neel50d6K")
-
+wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
+#wordVec, wordID, numIDS, dim = GetWordVec("../neel50d6K")
 print "INPUT WORD VECTORS COMPLETE"
 
 stopWords = GetWordFile("../stopwords", [])					#Takes two arguments, the second one is list of excluded words
-
 print "GETTING STOPWORDS COMPLETE"														#Getting list of stopwords	
 
 wordFreq = GetWordFile("../vocab.txt", stopWords)					#Getting words in order of word frequency
+
+wordDist = GetFreqFile("../wordfreq.txt")							#Get the frequencies of a word
+maxSize = 5000000
+noisyWords = GetNoisyList (wordDist, maxSize)
 
 tfidf = {}
 validWords = set(wordID)&set(wordFreq)								#Create set of valid words
@@ -37,62 +39,41 @@ with open("../tfidf.txt","r") as f:																#Get the tfidf of words
 raw_input("ARE YOU SURE YOU WANT TO CONSTRUCT CONTEXT VECTORS (Y/N) : ")
 
 print "GETTING TFIDF COMPLETE"														#Getting list of stopwords	
-
 print wordFreq[:100]
 #print wordVec.keys()[:100] 	
 
 multiList = []
-vocabID = {}
-invVocab = {}
-numIDS = 0
 
 trimNum = 6000																		#Get the number of words to consider
-																					#Create the trimmed list of words
-for i in range(0,trimNum):
+
+for i in range(0,trimNum):															#Create the trimmed list of words
 	if (wordFreq[i] in validWords):
 		multiList.append(wordFreq[i])
 
 sz = len(multiList)
-
 print len(multiList)
-
 print "SIZE IS ", sz
-
-simWords = {}
 
 ###############TFIDF PRUNING########################
 tfidfList = tfidf.values()
 tfidfList.sort()
 #tmp = tfidfList[int(-(0.99)*len(tfidfList))]											#Change this hyper parameter to get different results
 tmp = 2
-
 print "THE PRUNED TFIDF IS",tmp
-
 for x in tfidf.keys():
 	if (tfidf[x] < tmp):
 		tfidf[x] = 0
 #################PRUNING COMPLETE####################
 
-"""
-################CREATE SIMILARITY DICTIONARY################
-
-for w in multiList:
-	for x in tfidf.keys():
-		if (tfidf.get(x, 0) > 0):
-			simWords[(w,x)] = sim(w, x, wordVec, wordID)
-			simWords[(x,w)] = simWords[(w,x)]
-############################################################
-"""
-
 np.set_printoptions(precision=3)															#Pretty print
 np.set_printoptions(suppress=True)
 
-#Construct the context vectors
+#Find the good words
 
 #First open the files of a couple of words
 #We first read the files piece wise (Since they are broken into multiple pieces)
 #We go over the file and compute the corresponding context vector for it
-#We append the context vector for a word in a file named <word>.cont
+#We append the context vector for a word in a file named <word>.winwords
 #We compute the vectors of only the words which have their files open
 
 i = 0																		#Starting point
@@ -106,36 +87,26 @@ while (i < trimNum):
 	for w in wordSlice:
 		if (w.isalpha()):
 			selWords.append(w)
+
 	i += 1000
 
 	fileList = {}
 	for j in selWords:
-		fileList[j] = open("wordcontexts"+str(dim)+"d_neelB/"+j+".cont", "a")
+		fileList[j] = open("goodwords"+str(dim)+"d_huangB/"+j+".winwords", "a")
 
 		#wordcontexts_A : It contains naive construction of context vectors.
 		#wordcontexts_B : It involves the usage of similarity metric while computing the context vectors.
 		#wordcontexts_large : It contains files from 11-150, otherwise its 11-39
 
-	for m in range(11,39):
+	for m in range(11,25):
 		fileName = "../testfiles_sm/tf00"+str(m)
 		print fileName,
-		MakeContextVec(fileName, wordVec, dim, wordID, validWords, tfidf, stopWords, selWords, window, fileList)
+		MakeContextVecWithGoodWords(fileName, wordVec, dim, wordID, validWords, tfidf, stopWords, selWords, window, fileList)
 	
 		print m, "IS DONE",
 		if(m%3==0):
 			print "\n",
 
-	"""	
-	for m in range(100,150):
-		fileName = "../testfiles_sm/tf0"+str(m)
-		print fileName,
-		MakeContextVec(fileName, wordVec, dim, wordID, validWords, tfidf, stopWords, selWords, window, fileList)
-	
-		print m, "IS DONE",
-		if(m%3==0):
-			print "\n",
-	"""
-	
 	for j in selWords:
 		fileList[j].close()
 	
