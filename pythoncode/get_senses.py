@@ -9,12 +9,6 @@ from sklearn.cluster import MeanShift, estimate_bandwidth
 
 from create_contexts import *
 
-def Normalize (v):
-    norm = np.sqrt(v.dot(v))
-    if (norm == 0): 
-       return v, 0
-    return (v/norm), 1
-
 def GetContexts (fileName, dim):
 	contextList = []
 	with open(fileName,"r") as f:																#Read the context vectors from the file
@@ -34,13 +28,13 @@ def GetContexts (fileName, dim):
 def cluster(word, numClusters, dim): 									#Takes the word for which numClusters cluster need to be computed
 	fileName = ""
 	if (dim == 50):
-		fileName = "wordcontexts50d_huangB/" + word + ".cont"
+		fileName = "wordcontexts50d_huanglargeB/" + word + ".cont"
 	else:
 		fileName = "wordcontexts300d_6000(11-39)/" + word + ".cont"
 	
 	contextList = GetContexts(fileName, dim)
 
-	print word, len(contextList),
+	print word, len(contextList), numClusters, "::",
 	
 	if(len(contextList) < numClusters):
 		return []
@@ -52,18 +46,22 @@ def cluster(word, numClusters, dim): 									#Takes the word for which numClust
 
 	return centroids
 
-def NonParCluster(word, dim, noisyWords, wordVec, wordID): 									#Computes a clustering after estimating the number of clusters
+def NonParCluster(word, dim, noisyWords, wordVec, wordID, optKWord): 									#Computes a clustering after estimating the number of clusters
+																										#optKWord contains the pre known optimal value
 	fileName = "goodwords50d_huangB/" + word + ".winwords"
-	
 	contextList = GetContexts(fileName, dim)
 
-	print len(contextList),":",
-	
-	optK = OptimalCluster(word, contextList, dim, noisyWords, wordVec, wordID)
-	
-	print optK
+	#print len(contextList),":",
 
-	if (optK == 0):
+	optK = 0
+	if word not in optKWord:
+		optK = OptimalCluster(word, contextList, dim, noisyWords, wordVec, wordID)
+		print "I DID THIS COMPUTATION"
+	else:
+		optK = optKWord[word]
+	print optK,
+
+	if (optK <= 1):
 		return []
 	return cluster(word, optK, dim)
 
@@ -89,12 +87,13 @@ def GetValidationContexts (fileName, dim):
 	return validationList
 
 #Presently finding the optimal on a reduced subset of contexts
+#Change whether we use validation list or context list for estimation
 
 def OptimalCluster(word, contextList, dim, noisyWords, wordVec, wordID): 						#Takes the word for which optimal clusters need to be computed
 																								#Does it on the basis of a function to be optimised
 	fileName = "goodwords50d_huangB/"+word+".winwords"
 	candK = []
-	for x in range(1,10):
+	for x in range(1,20):
 		candK.append(x)
 
 	maxEstimate = -1000000000
@@ -138,7 +137,6 @@ def OptimalCluster(word, contextList, dim, noisyWords, wordVec, wordID): 						#
 def GetEstimate (word, clusters, validationList, dim, noisyWords, wordVec, wordID):	#Takes the target word, clusters represent lists numClusters cluster centers
 																					#ValidationList is a list of the contexts and good words
 																					#noisyWords is a dictionary containing count of the noisy words.
-																					#AT THE MOMENT IT IS A LIST OF ALL NOISY WORDS
 																					#Wordvec is used to get the word vector during estimation
 	numClusters = len(clusters)
 	goodWordCount = [dict() for x in range(numClusters)]
