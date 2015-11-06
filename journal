@@ -109,7 +109,50 @@ Past:
 		0.634696 3.85217 0.47401 20.7552 0.26678 2.43228
 		0.400973
 		0.404591
+- Computed results for huang large (method B)
+	- Huang 50d large (method B)
+		For avgsim we have
+		0.315485 3.85217 0.120231 20.7552 0.143877 2.43228
+		0.536025
+		0.550465
+		For globsim we have
+		0.261663 3.85217 0.187796 20.7552 0.34544 2.43228
+		0.526004
+		0.449687
+		For avgsimc we have
+		0.040636 3.85217 0.00497702 20.7552 0.0576691 2.43228
+		0.226757
+		0.544967
+		For locsim we have
+		0.400152 3.85217 0.291369 20.7552 0.36228 2.43228
+		0.402845
+		0.362949
+
+5 Nov:
+- Implemented the training data reconstructor
+- Implemented the non parametric clustering algorithm (LOTS OF WORK)
+- Created the context window creator, cost estimator
 	
+6 Nov:
+- Computed results for non paramteric estimation	
+	- Huang 50d (method B)
+		For avgsim we have
+		0.300508 3.85217 0.115356 20.7552 0.158276 2.43228
+		0.506823
+		0.509791
+		For globsim we have
+		0.261663 3.85217 0.187796 20.7552 0.34544 2.43228
+		0.526004
+		0.449687
+		For avgsimc we have
+		0.0433714 3.85217 0.00778581 20.7552 0.0768423 2.43228
+		0.227375
+		0.361556
+		For locsim we have
+		0.384956 3.85217 0.274908 20.7552 0.355973 2.43228
+		0.435203
+		0.393628
+
 To discuss:
 
 - Decent results but huge room for improvement.
@@ -177,8 +220,5 @@ Todo:
 		0.381933 3.85217 0.278537 20.7552 0.364231 2.43228
 		0.403548
 		0.359686
-
-
-
 
 - Start coding up parameter estimation using the cost estimation
