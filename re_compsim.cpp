@@ -62,10 +62,10 @@ struct sense{
 struct senseList{
     int totalSenses;
     vector <sense> senses;
+    vector <double> global;
     double size;
 };
 
-map <string, vector <double> > wordvec;
 map <string, senseList> multisense;
 map <string, int> wordfreq;
 map <string, int> stopword;
@@ -116,6 +116,14 @@ void norm(vector <double> &arr)
     arr = arr/a;
 }
 
+void InitONE(vector <double>& tmp, int size)
+{
+    tmp.resize(size);
+    for(int i=0;i<size;i++)
+        tmp[i]=1;
+    norm(tmp);
+}
+
 double similarity(vector <double> arr, vector <double> bar)
 {
     double c=0,b=0.00000001,a=0.000000001;
@@ -128,6 +136,7 @@ double similarity(vector <double> arr, vector <double> bar)
         a += arr[i]*arr[i];
         b += bar[i]*bar[i];
     }
+    //cout<<"A IS "<<a<<" B IS "<<b<<endl;
     return (c/(sqrt(a)*sqrt(b)));
 }
 
@@ -172,6 +181,8 @@ void printout(senseList arr)
         cout<<arr.senses[i].senseNumber<<" "<<arr.senses[i].size<<" : ";
         printer(arr.senses[i].center);
     }
+    cout<<"THE GLOBAL VECTOR IS : \n";
+    printer(arr.global);
 }
 
 string int2string(int n)
@@ -193,48 +204,17 @@ int validword(string s)
     return 1;
 }
 
-double GlobalSim(string w1, string w2)
-{
-    vector <double> v1;
-    vector <double> v2;
-    if(wordvec.find(w1)==wordvec.end())
-        v1 = wordvec["UUUNKKK"];
-    else
-        v1 = wordvec[w1];
-    if(wordvec.find(w2)==wordvec.end())
-        v2 = wordvec["UUUNKKK"];
-    else
-        v2 = wordvec[w2];
-    return similarity(v1,v2);        
-}
-
 double AVGSim(string w1, string w2)
 {
     int i,j,t;
     senseList s1, s2;
     
     if(multisense.find(w1)==multisense.end())
-    {
-        cout<<"NOT FOUND";
-        sense tmp;
-        if(wordvec.find(w1)==wordvec.end())
-            tmp.center = wordvec["UUUNKKK"];
-        else
-            tmp.center = wordvec[w1];
-        s1.senses.push_back(tmp);
-    }
+        cout<<"NOT FOUND ",s1 = multisense["UUUNKKK"];
     else
         s1 = multisense[w1];
     if(multisense.find(w2)==multisense.end())
-    {
-        cout<<"NOT FOUND";
-        sense tmp;
-        if(wordvec.find(w2)==wordvec.end())
-            tmp.center = wordvec["UUUNKKK"];
-        else
-            tmp.center = wordvec[w2];
-        s2.senses.push_back(tmp);
-    }
+        cout<<"NOT FOUND ",s2 = multisense["UUUNKKK"];
     else
         s2 = multisense[w2];
     double scor=0;
@@ -246,6 +226,21 @@ double AVGSim(string w1, string w2)
     return (scor/(i*j*(1.0)));        
 }
 
+double GlobalSim(string w1, string w2)
+{
+    vector <double> v1;
+    vector <double> v2;
+    if(multisense.find(w1)==multisense.end())
+        v1 = multisense["UUUNKKK"].global;
+    else
+        v1 = multisense[w1].global;
+    if(multisense.find(w2)==multisense.end())
+        v2 = multisense["UUUNKKK"].global;
+    else
+        v2 = multisense[w2].global;
+    return similarity(v1,v2);        
+}
+
 double ProbMap(double t)
 {
     return (1/(1.001-t));
@@ -254,8 +249,13 @@ double ProbMap(double t)
 void ComputeProb(vector <double> c, senseList s, vector <double> &prob)
 {
     double sum=0;
+    
+    //cout<<"THE SIZE OF SENSES IS "<<s.totalSenses<<endl;
+    //printer(c);
+        
     for(int i=0;i<s.senses.size();i++)
     {
+        //printer(s.senses[i].center);
         double t = similarity(c,s.senses[i].center);
         t = ProbMap(t);
         prob.push_back(t);
@@ -271,35 +271,23 @@ double AVGSimC(string w1, vector <double> c1, string w2, vector <double> c2)
     int i,j,t;
     senseList s1, s2;
     
-    if(multisense.find(w1)==multisense.end())
-    {
-        cout<<"NOT FOUND";
-        sense tmp;
-        if(wordvec.find(w1)==wordvec.end())
-            tmp.center = wordvec["UUUNKKK"];
-        else
-            tmp.center = wordvec[w1];
-        s1.senses.push_back(tmp);
-    }
+    if(multisense.find(w1) == multisense.end())
+        cout<<"NOT FOUND ",s1 = multisense["UUUNKKK"];
     else
         s1 = multisense[w1];
-    if(multisense.find(w2)==multisense.end())
-    {
-        cout<<"NOT FOUND";
-        sense tmp;
-        if(wordvec.find(w2)==wordvec.end())
-            tmp.center = wordvec["UUUNKKK"];
-        else
-            tmp.center = wordvec[w2];
-        s2.senses.push_back(tmp);
-    }
+    if(multisense.find(w2) == multisense.end())
+        cout<<"NOT FOUND IT ",s2 = multisense["UUUNKKK"];
     else
         s2 = multisense[w2];
     double scor=0;
     vector <double> prob1, prob2;
     //cout<<"SOME1\n";
+    //printf("THE Truth value is : %d\n",multisense.find(w1)==multisense.end());
+    //printout(s1);
     ComputeProb(c1,s1,prob1);
     //cout<<"SOME2\n";
+    //printf("THE Truth value is : %d\n",multisense.find(w2)==multisense.end());
+    //printout(s2);
     ComputeProb(c2,s2,prob2);
     for(i=0;i<s1.senses.size();i++)
     {
@@ -315,29 +303,14 @@ double LocSim(string w1, vector <double> c1, string w2, vector <double> c2)
     senseList s1, s2;
     
     if(multisense.find(w1)==multisense.end())
-    {
-        cout<<"NOT FOUND";
-        sense tmp;
-        if(wordvec.find(w1)==wordvec.end())
-            tmp.center = wordvec["UUUNKKK"];
-        else
-            tmp.center = wordvec[w1];
-        s1.senses.push_back(tmp);
-    }
+        cout<<"NOT FOUND ",s1 = multisense["UUUNKKK"];
     else
         s1 = multisense[w1];
     if(multisense.find(w2)==multisense.end())
-    {
-        cout<<"NOT FOUND";
-        sense tmp;
-        if(wordvec.find(w2)==wordvec.end())
-            tmp.center = wordvec["UUUNKKK"];
-        else
-            tmp.center = wordvec[w2];
-        s2.senses.push_back(tmp);
-    }
+        cout<<"NOT FOUND ",s2 = multisense["UUUNKKK"];
     else
         s2 = multisense[w2];
+
     double scor=0;
     vector <double> prob1, prob2;
     //cout<<"SOME1\n";
@@ -416,6 +389,18 @@ double spearman(vector <double> s1, vector <double> s2)
     return 1-s;
 }
 
+string ExtractRoot(string str)
+{
+    string ans = "";
+    int i = 0;
+    while ((i<str.length()) && (str[i] != '_'))
+    {
+        ans += str[i];
+        i += 1;
+    }
+    return ans;
+}
+
 //Run for more iterations to see where it converges
 //Also try running with the estimated sense vectors
 //Modify code to include other embeddings too in the final output
@@ -436,107 +421,85 @@ int main()
 
     //FILE* fn = fopen("multisenses3","r");                                                                       //INPUT MULTISENSE VECTORS
     //FILE* fn = fopen("server_data/multisenses3n300d_goog6000.vec","r");                                                                       //INPUT MULTISENSE VECTORS
-    FILE* fn = fopen("server_data/multisenses3n50d_huang6000.vec","r");
+    //FILE* fn = fopen("server_data/multisenses3n50d_huang6000.vec","r");
     //FILE* fn = fopen("server_data/multisenses3n50d_huanglargeB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
     //FILE* fn = fopen("server_data/multisenses3n50d_neelB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
     //FILE* fn = fopen("server_data/npmultisenses50d_huanglargeB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
-    //FILE* fn = fopen("server_data/npmultisenses50d_neellargeB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
-    while(!feof(fn))
-    {
-        char str[110];
-        int totsense,dim;
-        fscanf(fn,"%s %d %d",str,&totsense,&dim);   
-        //cout <<"|"<<string(str)<<","<<totsense<<","<<dim<<"|,";
-        if (totsense == 0)
-            continue;
-        senseList some;
-        some.totalSenses = totsense;
-        for(i=0;i<totsense;i++)
-        {
-            int a,b;
-            sense tmp;
-            fscanf(fn,"%d",&a);
-            tmp.senseNumber = a;
-            tmp.center.resize(dim);
-            for(int t=0;t<dim;t++)
-                fscanf(fn,"%lf",&tmp.center[t]);
-            some.senses.push_back(tmp);
-        }
-        multisense.insert(make_pair(string(str),some));
-    }
-    fclose(fn);
-    
-    //printf("THE Truth value is : %d\n",multisense.find("brazil")==multisense.end());
-
-    //fi = fopen("npmssr50d.txt","r");
-    fi = fopen("huang50rep","r");
-    //fi = fopen("neel50d6K","r");
-    //fi = fopen("googvecs","r");
-    
-    cout<<"SUCCESS\n";
-
-    fscanf(fi,"%d%d",&numWords,&dim);
+    FILE* fn = fopen("huang_vectors_B.txt","r");                                                                       //INPUT MULTISENSE VECTORS
+    //FILE* fn = fopen("debugvecs.txt","r");                                                                       //INPUT MULTISENSE VECTORS
+   
+    fscanf(fn,"%d%d",&numWords,&dim);
     cout<<numWords<<" "<<dim<<endl;
     
     for(i=0 ; i < numWords ; i++)                                                                                   //INPUT GLOBAL VECTORS
     {
         char str[110];
-        fscanf(fi,"%s",str);
+        fscanf(fn,"%s",str);
         string tmp = string(str);
+        //cout<<tmp<<":";
+        string root = ExtractRoot(tmp);
+        //cout<<root<<":";
         vector <double> vec;
         vec.resize(dim);
         for(j=0;j<dim;j++)
-            fscanf(fi,"%lf",&vec[j]);
-        wordvec.insert(make_pair(tmp,vec));
+            fscanf(fn,"%lf",&vec[j]);
+        if (multisense.find(root) == multisense.end())
+        {
+            senseList some;
+            some.totalSenses = some.size = 1;
+            some.global = vec;
+            sense stmp;
+            stmp.senseNumber = 0;
+            stmp.center = vec;
+            some.senses.push_back(stmp);
+            multisense.insert(make_pair(root,some));                
+        }
+        else
+        {
+            //cout<<root<<":";
+            sense stmp;
+            stmp.senseNumber = multisense[root].totalSenses;
+            stmp.center = vec;
+            multisense[root].global = (multisense[root].global)*(multisense[root].totalSenses*(1.0)); 
+            multisense[root].global = multisense[root].global + vec;
+            multisense[root].totalSenses++;
+            multisense[root].global = (multisense[root].global)/(multisense[root].totalSenses*(1.0)); 
+            multisense[root].senses.push_back(stmp);            
+        }
         if(i%10000==0)
-            cout<<i<<endl;
+            cout<<i<<",";
+        if(i%100000==0)
+            cout<<endl;
     }
+    fclose(fn);
+    cout<<endl;
+
+    /*for(map<string, senseList> iterator = multisense.begin(); iterator != multisense.end(); iterator++) 
+    {
+        string tmp = iterator->first;
+        InitNULL(multisense[tmp].global,dim);
+        for(int i=0;i<multisense[tmp].senses.size();i++)
+        {
+            multisense[tmp].global = multisense[tmp].global +  multisense[tmp].senses[i].center;
+        }
+        multisense[tmp].global = multisense[tmp].global/(multisense[tmp].senses.size()*(1.0)); 
+    }*/
+
+    //printf("THE Truth value is : %d\n",multisense.find("brazil")==multisense.end());
     vector <double> vec;
     vec.resize(dim);
-    InitNULL(vec,dim);
-    if(wordvec.find("UUUNKKK")==wordvec.end())
-        wordvec.insert(make_pair("UUUNKKK",vec));
+    sense stmp;
+    stmp.senseNumber = 0;        
+    InitONE(stmp.center,dim);
+    senseList some;
+    some.totalSenses = some.size = 1;
+    some.global = stmp.center;
+    some.senses.push_back(stmp);            
+    if(multisense.find("UUUNKKK")==multisense.end())
+        multisense.insert(make_pair("UUUNKKK",some));
     
-    /*for(i=0 ; i < numWords ; i++)                                                                                   //INPUT GLOBAL VECTORS
-    {
-        char str[110];
-        int a;
-        fscanf(fi,"%s %d",str,&a);
-        string tmp = string(str);
-        //cout<<str<<","<<a<<":";
-        vector <double> vec;
-        vec.resize(dim);
-        for(j=0;j<dim;j++)
-            fscanf(fi,"%lf",&vec[j]);
-        wordvec.insert(make_pair(tmp,vec));
-        double tf;
-        for(j=0;j<2*a;j++)
-            for(int tj=0;tj<dim;tj++)
-                fscanf(fi,"%lf",&tf);
-        if(i%10000==0)
-            cout<<i<<endl;
-    }*/
-    fclose(fi);
-    
-    cout<<"SUCCESS\n";
-    i=0;
-    /*fi = fopen("vocab.txt","r");                                                                                    //INPUT VOCAB FREQUENCY
-    while(1)
-    {
-        char str[110];
-        fscanf(fi,"%s",str);
-        string tmp = string(str);
-        int f,waste;
-        //fscanf(fi,"%d%d",&waste,&f);
-        wordfreq.insert(make_pair(tmp,20000-i));
-        if(i%10000==0)
-            cout<<i<<endl;
-        if(feof(fi))
-            break;
-        i+=1;
-    }
-    fclose(fi);
-    */
+    //printout(multisense["UUUNKKK"]);
+    //printout(multisense["brazil"]);
 
     fi = fopen("vocab.txt","r");
     
@@ -563,7 +526,6 @@ int main()
 
     fclose(fi);
     fclose(ft);
-
 
     cout<<"SUCCESS\n";
     fi = fopen("stopwords","r");                                                                                    //INPUT STOPWORDS
@@ -665,49 +627,54 @@ int main()
             InitNULL(contvec,dim);
             for(int k = j-window ; k <= (j+window) ; k++)
             {
+                //cout<<k<<" : "<<sent[i].size()<<endl;
                 if(k<0)
                 {
-                    if(wordvec.find("<s>")!=wordvec.end())
-                        ;//contvec=contvec+wordvec["<s>"]*tfidf["<s>"],skips.push_back("<s>");
+                    if(multisense.find("<s>")!=multisense.end())
+                        contvec=contvec+(multisense["<s>"].global)*tfidf["<s>"],skips.push_back("<s>");
                     k=-1;
                 }
                 else if(k>=sent[i].size())
                 {
-                    if(wordvec.find("</s>")!=wordvec.end())
-                        ;//contvec=contvec+wordvec["</s>"]*tfidf["</s>"],skips.push_back("</s>");
+                    if(multisense.find("</s>")!=multisense.end())
+                        contvec=contvec+(multisense["</s>"].global)*tfidf["</s>"],skips.push_back("</s>");
                     break;
                 }
-                else if(wordvec.find(sent[i][k])==wordvec.end())
+                else if(multisense.find(sent[i][k]) == multisense.end())
                     continue;
                     //contvec=contvec+wordvec["UUUNKKK"]*tfidf["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
                 else if(tfidf.find(sent[i][k])==tfidf.end())
                     continue;
                     //contvec=contvec+wordvec["UUUNKKK"]*tfidf["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
                 else if(k!=j)
+                {   
                     //contvec=contvec+(wordvec[sent[i][k]]*tfidf[sent[i][k]]);
-                    if(wordvec.find(sent[i][j])==wordvec.end())
-                        contvec=contvec+(wordvec[sent[i][k]]*tfidf[sent[i][k]]);
+                    if(multisense.find(sent[i][j]) == multisense.end())
+                        contvec=contvec+(multisense[sent[i][k]].global*tfidf[sent[i][k]])*(1.0/window);
                     else
-                        contvec=contvec+(wordvec[sent[i][k]]*tfidf[sent[i][k]])*similarity(wordvec[sent[i][k]],wordvec[sent[i][j]]);                        
+                        contvec=contvec+(multisense[sent[i][k]].global*tfidf[sent[i][k]])*similarity(multisense[sent[i][k]].global,multisense[sent[i][j]].global);                        
+                }
             }
-            //cout<<endl;
             norm(contvec);
+            //printer(contvec);
             contexts.push_back(contvec);
             w++;
         }
-        //cout<<target[0]<<":::"<<target[1]<<"  ";
-        //cout<<flush;
+        cout<<target[0]<<":::"<<target[1]<<"  ";
+        cout<<flush;
         double globsim = GlobalSim(target[0],target[1]);
         double avgsim = AVGSim(target[0],target[1]);
-        //cout<<contexts.size()<<" AND YORO\n";
+        cout<<contexts.size()<<" AND YORO\n";
         //printer(contexts[0]);
         //printer(contexts[1]);
         double avgsimc = AVGSimC(target[0],contexts[0],target[1],contexts[1]);
+        //cout<<"AVGSIMC "<<avgsimc<<endl;
         double locsim = LocSim(target[0],contexts[0],target[1],contexts[1]);
+        //cout<<"LOCSIM "<<locsim<<endl;
         j = sent[i].size()-11;
-        //cout<<sent[i][j]<<endl;
+        cout<<sent[i][j]<<endl;
         double scor = atof(sent[i][j].c_str());
-        //cout<<avgsim<<","<<globsim<<","<<avgsimc<<","<<locsim<<":"<<scor<<"\n";
+        cout<<avgsim<<","<<globsim<<","<<avgsimc<<","<<locsim<<":"<<scor<<"\n";
         s2.push_back(avgsim);
         s3.push_back(globsim);
         s4.push_back(avgsimc);

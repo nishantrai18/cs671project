@@ -134,7 +134,7 @@ Past:
 - Created the context window creator, cost estimator
 	
 6 Nov:
-- Computed results for non paramteric estimation	
+- Computed results for non parametric estimation	
 	- Huang 50d (method B)
 		For avgsim we have
 		0.300508 3.85217 0.115356 20.7552 0.158276 2.43228
@@ -152,73 +152,134 @@ Past:
 		0.384956 3.85217 0.274908 20.7552 0.355973 2.43228
 		0.435203
 		0.393628
+- Computed results with changed hyperparameters (NegativeSamplingSize = 1)
+	- Huang 50d (method B)
+		For avgsim we have
+		0.499779
+		0.512682
+		For globsim we have
+		0.526004
+		0.449687
+		For avgsimc we have
+		0.137384
+		0.3841
+		For locsim we have
+		0.404651
+		0.349391
+- Try estimation with the small group of contexts (POOR RESULTS)	
+	- Huang 50d (method B)
+		For avgsim we have
+		0.49761
+		0.502262
+		For globsim we have
+		0.526004
+		0.449687
+		For avgsimc we have
+		0.221959
+		0.338274
+		For locsim we have
+		0.413787
+		0.371109	
+- Computed results for parametric estimation for neel large 50d (K=3)
+	- Neel 50d (Large, method B)
+		For avgsim we have
+		0.431391
+		0.550242
+		For globsim we have
+		0.637675
+		0.623132
+		For avgsimc we have
+		0.214293
+		0.581403
+		For locsim we have
+		0.407309
+		0.405577
+- npmultisenses50d_huanglargeB
+	- Huang 50d (large, non parametric)
+		For avgsim we have
+		0.509594
+		0.523439
+		For globsim we have
+		0.526004
+		0.449687
+		For avgsimc we have
+		0.237703
+		0.378648
+		For locsim we have
+		0.413341
+		0.37005
+- npmultisenses50d_neellargeB
+	- Neel 50d (large, non parametric)
+		For avgsim we have
+		0.443471
+		0.483126
+		For globsim we have
+		0.637675
+		0.623132
+		For avgsimc we have
+		0.203441
+		0.362826
+		For locsim we have
+		0.382614
+		0.328286
+
+7 Nov:
+
+- Collected results after retraining the data
+	- Huang 50d non parametric (Large) (Low training)
+		For avgsim we have
+		0.621976
+		0.60131
+		For globsim we have
+		0.626264
+		0.605609
+		For avgsimc we have
+		0.2486
+		0.534034
+		For locsim we have
+		0.595667
+		0.563378
+	- Huang 50d non parametric (Large) (Higher training)
+		For avgsim we have
+		0.628617
+		0.606795
+		For globsim we have
+		0.626879
+		0.605398
+		For avgsimc we have
+		0.251562
+		0.53977
+		For locsim we have
+		0.593894
+		0.56275
 
 To discuss:
 
 - Decent results but huge room for improvement.
 - Permutation of word word coocurrence matrix, using cuthill-mckee algorithm. Don't have an idea of how to interpret the results.				(Nothing further)
 - For parametric clustering, trying algorithms which give uneven cluster size. Models real life polysemy						(Means shift algorithm)			
-- Till now ignoring the function needed to be optimised. Use it by making the update using GD.
-- Instead of a GD update, we try to incorporate it in our clustering approach. We choose a parameter which gives the best value of function. (Paramter estimation)
-- Different senses approach, if our clustering algorithm is reliable, then for each word estimate the number of clusters using an approach similar to the previous one.
-- Problems, the space of the context vectors seems quite random. Much less structure than word vectors.
-- To tackle such problems, we looked at a paper for paragraph vectors (hoping it would also create phrase/context vectors) 
-- Another possible approach involves marking the words as distinct senses and then train the vectors again on it (Gives good results) (The problem in this case becomes efficient WSD)
+- Till now ignoring the function needed to be optimised. Use it by making the update using GD.								(NOT DONE)
+- Instead of a GD update, we try to incorporate it in our clustering approach. We choose a parameter which gives the best value of function. (Paramter estimation)	(DONE)
+- Different senses approach, if our clustering algorithm is reliable, then for each word estimate the number of clusters using an approach similar to the previous one.		(DONE)
+- Problems, the space of the context vectors seems quite random. Much less structure than word vectors.				(Nothing further)
+- To tackle such problems, we looked at a paper for paragraph vectors (hoping it would also create phrase/context vectors) 			(NOT DONE)
+- Another possible approach involves marking the words as distinct senses and then train the vectors again on it (Gives good results) (The problem in this case becomes efficient WSD)		
 
-Todo:
+Todo (Result collection):
 
-- Create contexts for 300d 3000 words (Using googvecs)		(DONE)
-- Create multiple sense vectors using them		(DONE)
-- Compute scores for the googvec multisenses	
-	- Googvecs 300d (3000 words)
-		For avgsim we have
-		0.399086 3.85217 0.232895 20.7552 0.27134 2.43228
-		0.406102
-		0.397981
-		For globsim we have
-		0.298135 3.85217 0.178566 20.7552 0.299469 2.43228
-		0.619276
-		0.614734	
-	- Googvecs 300d (6000 words)
-		For avgsim we have
-		0.593754 3.85217 0.383041 20.7552 0.174635 2.43228
-		0.284268
-		0.419487
-		For globsim we have
-		0.298135 3.85217 0.178566 20.7552 0.299469 2.43228
-		0.619276
-		0.614734
-		For avgsimc we have
-		0.0731035 3.85217 0.00842734 20.7552 0.0555267 2.43228
-		0.155933
-		0.429781
+- Original C++ results
+- Context method A:
+	- multisenses3n300d_goog6000								(Google multiple senses using parametric clustering, K=3)
+	- multisenses3n_huang.vec								(Huang Parametric K=3 clustering on files 11-39)
+	- multisenses3n300d_goog.vec      							(Google K=3 clustering with small words (1000))
+	- multisenses3n50d.vec        							(Something, probably huang on 1000 words)
+- Context method B:	
+	- multisenses3n50d_huangB.vec								(Parametric clustering K=3 on Huang, files 11-39)
+	- multisenses3n50d_neelB.vec								(Parametric clustering K=3 on Neel, files 11-39)
+	- multisenses3n50d_huanglargeB.vec  						(Parametric clustering K=3 on Huang, files 11-150)
+	- npmultisenses50d_huangBtest.vec							(Non parametric clustering on Huang, files 11-39, estimator files 11-25, same as below but different hyperparameter)
+	- npmultisenses50d_huangB.vec								(Non parametric clustering on Huang, files 11-39, estimator files 11-25)
+	
+- Compute senses for large NeelB (Both done), large huang (both done). On sm huang, try estimation with the small group of contexts (POOR RESULTS). Finally try non parametric with context list.
+- Data cluster validation, check the contexts of the words in different clusters. 
 
-- Compute AvgSimC metric 
-	- HUANG50d	(PARAMETER = 3) (6000 words)
-		For avgsimc we have					(Linear probabilities)
-		0.0403962 3.85217 0.00496027 20.7552 0.0576925 2.43228
-		0.219522
-		0.502927
-		For avgsimc we have					(Inverse of cosine distance)
-		0.0407505 3.85217 0.00500621 20.7552 0.0578411 2.43228
-		0.222036
-		0.505421
-	- HUANG50d with different way of constructing contexts
-		For avgsim we have
-		0.302182 3.85217 0.113467 20.7552 0.148838 2.43228
-		0.51997
-		0.528201
-		For globsim we have
-		0.261663 3.85217 0.187796 20.7552 0.34544 2.43228
-		0.526004
-		0.449687
-		For avgsimc we have
-		0.0391356 3.85217 0.00488637 20.7552 0.0579204 2.43228
-		0.226837
-		0.527503
-		For locsim we have
-		0.381933 3.85217 0.278537 20.7552 0.364231 2.43228
-		0.403548
-		0.359686
-
-- Start coding up parameter estimation using the cost estimation
