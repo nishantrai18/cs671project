@@ -215,7 +215,7 @@ double AVGSim(string w1, string w2)
     
     if(multisense.find(w1)==multisense.end())
     {
-        cout<<"NOT FOUND";
+        //cout<<"NOT FOUND";
         sense tmp;
         if(wordvec.find(w1)==wordvec.end())
             tmp.center = wordvec["UUUNKKK"];
@@ -227,7 +227,7 @@ double AVGSim(string w1, string w2)
         s1 = multisense[w1];
     if(multisense.find(w2)==multisense.end())
     {
-        cout<<"NOT FOUND";
+        //cout<<"NOT FOUND";
         sense tmp;
         if(wordvec.find(w2)==wordvec.end())
             tmp.center = wordvec["UUUNKKK"];
@@ -273,7 +273,7 @@ double AVGSimC(string w1, vector <double> c1, string w2, vector <double> c2)
     
     if(multisense.find(w1)==multisense.end())
     {
-        cout<<"NOT FOUND";
+        //cout<<"NOT FOUND";
         sense tmp;
         if(wordvec.find(w1)==wordvec.end())
             tmp.center = wordvec["UUUNKKK"];
@@ -285,7 +285,7 @@ double AVGSimC(string w1, vector <double> c1, string w2, vector <double> c2)
         s1 = multisense[w1];
     if(multisense.find(w2)==multisense.end())
     {
-        cout<<"NOT FOUND";
+        //cout<<"NOT FOUND";
         sense tmp;
         if(wordvec.find(w2)==wordvec.end())
             tmp.center = wordvec["UUUNKKK"];
@@ -306,7 +306,7 @@ double AVGSimC(string w1, vector <double> c1, string w2, vector <double> c2)
         for(j=0;j<s2.senses.size();j++)
             scor+=(prob1[i]*prob2[j]*similarity(s1.senses[i].center,s2.senses[j].center));
     }
-    return (scor/(i*j*(1.0)));        
+    return scor;        
 }
 
 double LocSim(string w1, vector <double> c1, string w2, vector <double> c2)
@@ -316,7 +316,7 @@ double LocSim(string w1, vector <double> c1, string w2, vector <double> c2)
     
     if(multisense.find(w1)==multisense.end())
     {
-        cout<<"NOT FOUND";
+        //cout<<"NOT FOUND";
         sense tmp;
         if(wordvec.find(w1)==wordvec.end())
             tmp.center = wordvec["UUUNKKK"];
@@ -328,7 +328,7 @@ double LocSim(string w1, vector <double> c1, string w2, vector <double> c2)
         s1 = multisense[w1];
     if(multisense.find(w2)==multisense.end())
     {
-        cout<<"NOT FOUND";
+        //cout<<"NOT FOUND";
         sense tmp;
         if(wordvec.find(w2)==wordvec.end())
             tmp.center = wordvec["UUUNKKK"];
@@ -434,12 +434,12 @@ int main()
     
     FILE* fi;
 
-    //FILE* fn = fopen("multisenses3","r");                                                                       //INPUT MULTISENSE VECTORS
-    //FILE* fn = fopen("server_data/multisenses3n300d_goog6000.vec","r");                                                                       //INPUT MULTISENSE VECTORS
-    FILE* fn = fopen("server_data/multisenses3n50d_huang6000.vec","r");
-    //FILE* fn = fopen("server_data/multisenses3n50d_huanglargeB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
-    //FILE* fn = fopen("server_data/multisenses3n50d_neelB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
-    //FILE* fn = fopen("server_data/npmultisenses50d_huanglargeB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
+    FILE* fn = fopen("server_data/multisenses3","r");                                                                       //INPUT MULTISENSE VECTORS
+    //FILE* fn = fopen("server_data/multisenses3n300d_goog.vec","r");                                                                       //INPUT MULTISENSE VECTORS
+    //FILE* fn = fopen("server_data/multisenses3n50d_huang6000.vec","r");
+    //FILE* fn = fopen("server_data/npmultisenses50d_huangB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
+    //FILE* fn = fopen("server_data/multisenses3n50d_neellargeB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
+    //FILE* fn = fopen("server_data/npmultisenses50d_huangBtest.vec","r");                                                                       //INPUT MULTISENSE VECTORS
     //FILE* fn = fopen("server_data/npmultisenses50d_neellargeB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
     while(!feof(fn))
     {
@@ -469,8 +469,8 @@ int main()
     //printf("THE Truth value is : %d\n",multisense.find("brazil")==multisense.end());
 
     //fi = fopen("npmssr50d.txt","r");
-    fi = fopen("huang50rep","r");
-    //fi = fopen("neel50d6K","r");
+    //fi = fopen("huang50rep","r");
+    fi = fopen("neel50d6K","r");
     //fi = fopen("googvecs","r");
     
     cout<<"SUCCESS\n";
@@ -489,7 +489,7 @@ int main()
             fscanf(fi,"%lf",&vec[j]);
         wordvec.insert(make_pair(tmp,vec));
         if(i%10000==0)
-            cout<<i<<endl;
+            ;//cout<<i<<endl;
     }
     vector <double> vec;
     vec.resize(dim);
@@ -555,7 +555,7 @@ int main()
         wordfreq.insert(make_pair(tmp,6000-i));
         tfidf.insert(make_pair(tmp,tfd));        
         if(i%10000==0)
-            cout<<i<<endl;
+            ;//cout<<i<<endl;
         if(feof(fi))
             break;
         i+=1;
@@ -668,13 +668,13 @@ int main()
                 if(k<0)
                 {
                     if(wordvec.find("<s>")!=wordvec.end())
-                        ;//contvec=contvec+wordvec["<s>"]*tfidf["<s>"],skips.push_back("<s>");
+                        contvec=contvec+wordvec["<s>"]*tfidf["<s>"],skips.push_back("<s>");
                     k=-1;
                 }
                 else if(k>=sent[i].size())
                 {
                     if(wordvec.find("</s>")!=wordvec.end())
-                        ;//contvec=contvec+wordvec["</s>"]*tfidf["</s>"],skips.push_back("</s>");
+                        contvec=contvec+wordvec["</s>"]*tfidf["</s>"],skips.push_back("</s>");
                     break;
                 }
                 else if(wordvec.find(sent[i][k])==wordvec.end())

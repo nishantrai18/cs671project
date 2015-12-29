@@ -124,6 +124,11 @@ void InitONE(vector <double>& tmp, int size)
     norm(tmp);
 }
 
+double ProbMap(double t)
+{
+    return (1/(1.000001-t));
+}
+
 double similarity(vector <double> arr, vector <double> bar)
 {
     double c=0,b=0.00000001,a=0.000000001;
@@ -137,7 +142,14 @@ double similarity(vector <double> arr, vector <double> bar)
         b += bar[i]*bar[i];
     }
     //cout<<"A IS "<<a<<" B IS "<<b<<endl;
-    return (c/(sqrt(a)*sqrt(b)));
+    double t = (c/(sqrt(a)*sqrt(b)));
+    return t;
+}
+
+double sigmoid(vector <double> arr, vector <double> bar)
+{
+    double tmp = similarity(arr, bar);
+    return (1.0/(1 + exp(-tmp)));
 }
 
 void clean(string &str)
@@ -210,11 +222,13 @@ double AVGSim(string w1, string w2)
     senseList s1, s2;
     
     if(multisense.find(w1)==multisense.end())
-        cout<<"NOT FOUND ",s1 = multisense["UUUNKKK"];
+        //cout<<"NOT FOUND ";
+        s1 = multisense["UUUNKKK"];
     else
         s1 = multisense[w1];
     if(multisense.find(w2)==multisense.end())
-        cout<<"NOT FOUND ",s2 = multisense["UUUNKKK"];
+        //cout<<"NOT FOUND ";
+        s2 = multisense["UUUNKKK"];
     else
         s2 = multisense[w2];
     double scor=0;
@@ -239,11 +253,6 @@ double GlobalSim(string w1, string w2)
     else
         v2 = multisense[w2].global;
     return similarity(v1,v2);        
-}
-
-double ProbMap(double t)
-{
-    return (1/(1.001-t));
 }
 
 void ComputeProb(vector <double> c, senseList s, vector <double> &prob)
@@ -272,11 +281,13 @@ double AVGSimC(string w1, vector <double> c1, string w2, vector <double> c2)
     senseList s1, s2;
     
     if(multisense.find(w1) == multisense.end())
-        cout<<"NOT FOUND ",s1 = multisense["UUUNKKK"];
+        //cout<<"NOT FOUND ";
+        s1 = multisense["UUUNKKK"];
     else
         s1 = multisense[w1];
     if(multisense.find(w2) == multisense.end())
-        cout<<"NOT FOUND IT ",s2 = multisense["UUUNKKK"];
+        //cout<<"NOT FOUND IT ";
+        s2 = multisense["UUUNKKK"];
     else
         s2 = multisense[w2];
     double scor=0;
@@ -294,7 +305,7 @@ double AVGSimC(string w1, vector <double> c1, string w2, vector <double> c2)
         for(j=0;j<s2.senses.size();j++)
             scor+=(prob1[i]*prob2[j]*similarity(s1.senses[i].center,s2.senses[j].center));
     }
-    return (scor/(i*j*(1.0)));        
+    return scor;        
 }
 
 double LocSim(string w1, vector <double> c1, string w2, vector <double> c2)
@@ -303,11 +314,13 @@ double LocSim(string w1, vector <double> c1, string w2, vector <double> c2)
     senseList s1, s2;
     
     if(multisense.find(w1)==multisense.end())
-        cout<<"NOT FOUND ",s1 = multisense["UUUNKKK"];
+        //cout<<"NOT FOUND ";
+        s1 = multisense["UUUNKKK"];
     else
         s1 = multisense[w1];
     if(multisense.find(w2)==multisense.end())
-        cout<<"NOT FOUND ",s2 = multisense["UUUNKKK"];
+        //cout<<"NOT FOUND ";
+        s2 = multisense["UUUNKKK"];
     else
         s2 = multisense[w2];
 
@@ -425,8 +438,9 @@ int main()
     //FILE* fn = fopen("server_data/multisenses3n50d_huanglargeB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
     //FILE* fn = fopen("server_data/multisenses3n50d_neelB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
     //FILE* fn = fopen("server_data/npmultisenses50d_huanglargeB.vec","r");                                                                       //INPUT MULTISENSE VECTORS
-    FILE* fn = fopen("huang_vectors_B.txt","r");                                                                       //INPUT MULTISENSE VECTORS
-    //FILE* fn = fopen("debugvecs.txt","r");                                                                       //INPUT MULTISENSE VECTORS
+    FILE* fn = fopen("npneel_vectors_skip_trainbig.txt","r");                                                                       //INPUT MULTISENSE VECTORS
+    //FILE* fn = fopen("neel_vectors_skip.txt","r");                                                                       //INPUT MULTISENSE VECTORS
+     //FILE* fn = fopen("debugvecs.txt","r");                                                                       //INPUT MULTISENSE VECTORS
    
     fscanf(fn,"%d%d",&numWords,&dim);
     cout<<numWords<<" "<<dim<<endl;
@@ -490,7 +504,8 @@ int main()
     vec.resize(dim);
     sense stmp;
     stmp.senseNumber = 0;        
-    InitONE(stmp.center,dim);
+    InitNULL(stmp.center,dim);
+    stmp.center[0] = 1;
     senseList some;
     some.totalSenses = some.size = 1;
     some.global = stmp.center;
@@ -646,6 +661,8 @@ int main()
                 else if(tfidf.find(sent[i][k])==tfidf.end())
                     continue;
                     //contvec=contvec+wordvec["UUUNKKK"]*tfidf["UUUNKKK"];                                                             //UNKNOWN ADDED AFTERWARDS, can also try skipping it
+                else if(tfidf[sent[i][k]] < 2)
+                    continue;                
                 else if(k!=j)
                 {   
                     //contvec=contvec+(wordvec[sent[i][k]]*tfidf[sent[i][k]]);
@@ -660,11 +677,11 @@ int main()
             contexts.push_back(contvec);
             w++;
         }
-        cout<<target[0]<<":::"<<target[1]<<"  ";
-        cout<<flush;
+        //cout<<target[0]<<":::"<<target[1]<<"  ";
+        //cout<<flush;
         double globsim = GlobalSim(target[0],target[1]);
         double avgsim = AVGSim(target[0],target[1]);
-        cout<<contexts.size()<<" AND YORO\n";
+        //cout<<contexts.size()<<" AND YORO\n";
         //printer(contexts[0]);
         //printer(contexts[1]);
         double avgsimc = AVGSimC(target[0],contexts[0],target[1],contexts[1]);
@@ -672,9 +689,9 @@ int main()
         double locsim = LocSim(target[0],contexts[0],target[1],contexts[1]);
         //cout<<"LOCSIM "<<locsim<<endl;
         j = sent[i].size()-11;
-        cout<<sent[i][j]<<endl;
+        //cout<<sent[i][j]<<endl;
         double scor = atof(sent[i][j].c_str());
-        cout<<avgsim<<","<<globsim<<","<<avgsimc<<","<<locsim<<":"<<scor<<"\n";
+        //cout<<avgsim<<","<<globsim<<","<<avgsimc<<","<<locsim<<":"<<scor<<"\n";
         s2.push_back(avgsim);
         s3.push_back(globsim);
         s4.push_back(avgsimc);
