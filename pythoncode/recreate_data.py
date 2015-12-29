@@ -6,8 +6,11 @@ from get_senses import *
 from create_contexts import *
 
 wordVec, wordID, numIDS, dim = GetWordVec("../neel50d6K")
+#wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
 
-multiWordVec, multiWordID, multiNumIDS, dim = GetMultiWordVec("multisense/multisenses3n50d_neelB.vec")	
+#multiWordVec, multiWordID, multiNumIDS, dim = GetMultiWordVec("multisense/multisenses3n50d_huanglargeB.vec")	
+multiWordVec, multiWordID, multiNumIDS, dim = GetMultiWordVec("multisense/npmultisenses50d_neellargeB.vec")	
+#multiWordVec, multiWordID, multiNumIDS, dim = GetMultiWordVec("multisense/npmultisenses50d_huanglargeB.vec")	
 
 print "INPUT WORD VECTORS/ MULTISENSE VECTORS COMPLETE"
 
@@ -68,9 +71,9 @@ i = 0																		#Starting point
 
 window = 5
 
-for m in range(11,12):
-	fileName = "../testfiles_sm/tf00"+str(m)
-	newFileName = "../trainfiles_neel6K/tf00"+str(m)
+for m in range(100,250):
+	fileName = "../testfiles_sm/tf0"+str(m)
+	newFileName = "../trainfiles_npneel/tf0"+str(m)
 
 	fw = open(newFileName, "w")
 
@@ -84,13 +87,13 @@ for m in range(11,12):
 				cleanSentence.append(CleanWord(sentence[i]))
 			for i in range (0, len(cleanSentence)):
 				if (cleanSentence[i] in multiList):																		#If current word is in the context list
-					wordVector = ConstructContextVec(cleanSentence, i, window, dim, wordVec, wordID, validWords, tfidf, stopWords)								
+					wordVector, tmp = ConstructContextVec(cleanSentence, i, window, dim, wordVec, wordID, validWords, tfidf, stopWords)								
 					if (wordVector.dot(wordVector) > 0):
 						wordVector, status = Normalize(wordVector)
 						if (status == 0):
 							continue
 						clusterID = -1
-						if word in multiWordID:
+						if cleanSentence[i] in multiWordID:
 							clusterID = AssignCluster(wordVector, multiWordVec[multiWordID[cleanSentence[i]]])
 						if (clusterID >= 0):
 							sentence[i] = cleanSentence[i] + "_" + str(clusterID)		

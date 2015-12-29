@@ -48,7 +48,7 @@ def cluster(word, numClusters, dim): 									#Takes the word for which numClust
 
 def NonParCluster(word, dim, noisyWords, wordVec, wordID, optKWord): 									#Computes a clustering after estimating the number of clusters
 																										#optKWord contains the pre known optimal value
-	fileName = "goodwords50d_huangB/" + word + ".winwords"
+	fileName = "goodwords50d_neelB/" + word + ".winwords"
 	contextList = GetContexts(fileName, dim)
 
 	#print len(contextList),":",
@@ -91,10 +91,12 @@ def GetValidationContexts (fileName, dim):
 
 def OptimalCluster(word, contextList, dim, noisyWords, wordVec, wordID): 						#Takes the word for which optimal clusters need to be computed
 																								#Does it on the basis of a function to be optimised
-	fileName = "goodwords50d_huangB/"+word+".winwords"
+	fileName = "goodwords50d_neelB/"+word+".winwords"
 	candK = []
 	for x in range(1,20):
 		candK.append(x)
+
+	print word, len(contextList),
 
 	maxEstimate = -1000000000
 	optK = 0
@@ -170,10 +172,12 @@ def GetEstimate (word, clusters, validationList, dim, noisyWords, wordVec, wordI
 	expNoisy = 0
 	for i in range(0,len(clusters)):
 		for k in goodWordCount[i].keys():
-			expGood += np.log(sigmoid(clusters[i].dot(wordVec[wordID[k]])))*goodWordCount[i][k]
+			if (k in wordID):
+				expGood += np.log(sigmoid(clusters[i].dot(wordVec[wordID[k]])))*goodWordCount[i][k]
 	for i in range(0,len(clusters)):
 		for k in noisyWordCount[i].keys():
-			expNoisy += np.log(sigmoid(-clusters[i].dot(wordVec[wordID[k]])))*noisyWordCount[i][k]
+			if (k in wordID):
+				expNoisy += (1 - np.log(sigmoid(clusters[i].dot(wordVec[wordID[k]]))))*noisyWordCount[i][k]
 
 	return expNoisy + expGood
 
@@ -261,9 +265,8 @@ def PlotTSNE (data, labels):										#Takes the data and the labels
 	        label, 
 	        xy = (x, y), xytext = (-20, 20),
 	        textcoords = 'offset points', ha = 'right', va = 'bottom',
-	        bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
+	        bbox = dict(boxstyle = 'round,pad=0.5', fc = 'green', alpha = 0.5),
 	        arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
-	
 
 	plt.title('TSNE Plot')
 	plt.xlim(x_min, x_max)

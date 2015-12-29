@@ -11,8 +11,9 @@ numIDS = {}																			#Inverse mapping for wordVec
 dim = 0
 
 #wordVec, wordID, numIDS, dim = GetWordVec("../googvecs")
-wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
-#wordVec, wordID, numIDS, dim = GetWordVec("../neel50d6K")
+#wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
+wordVec, wordID, numIDS, dim = GetWordVec("../neel50d6K")
+
 print "INPUT WORD VECTORS COMPLETE"
 
 stopWords = GetWordFile("../stopwords", [])					#Takes two arguments, the second one is list of excluded words
@@ -36,7 +37,7 @@ with open("../tfidf.txt","r") as f:																#Get the tfidf of words
 		tfidf[wordFreq[cnt]] = float(tfid)
 		cnt += 1
 
-raw_input("ARE YOU SURE YOU WANT TO CONSTRUCT CONTEXT VECTORS (Y/N) : ")
+raw_input("ARE YOU SURE YOU WANT TO CONSTRUCT GOOD WORD CONTEXT VECTORS (Y/N) : ")
 
 print "GETTING TFIDF COMPLETE"														#Getting list of stopwords	
 print wordFreq[:100]
@@ -92,7 +93,7 @@ while (i < trimNum):
 
 	fileList = {}
 	for j in selWords:
-		fileList[j] = open("goodwords"+str(dim)+"d_huangB/"+j+".winwords", "a")
+		fileList[j] = open("goodwords"+str(dim)+"d_neelB/"+j+".winwords", "a")
 
 		#wordcontexts_A : It contains naive construction of context vectors.
 		#wordcontexts_B : It involves the usage of similarity metric while computing the context vectors.

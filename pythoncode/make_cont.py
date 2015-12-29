@@ -110,13 +110,13 @@ while (i < trimNum):
 
 	fileList = {}
 	for j in selWords:
-		fileList[j] = open("wordcontexts"+str(dim)+"d_neelB/"+j+".cont", "a")
+		fileList[j] = open("wordcontexts"+str(dim)+"d_neellargeB/"+j+".cont", "a")
 
 		#wordcontexts_A : It contains naive construction of context vectors.
 		#wordcontexts_B : It involves the usage of similarity metric while computing the context vectors.
 		#wordcontexts_large : It contains files from 11-150, otherwise its 11-39
 
-	for m in range(11,39):
+	for m in range(11,100):
 		fileName = "../testfiles_sm/tf00"+str(m)
 		print fileName,
 		MakeContextVec(fileName, wordVec, dim, wordID, validWords, tfidf, stopWords, selWords, window, fileList)
@@ -125,7 +125,6 @@ while (i < trimNum):
 		if(m%3==0):
 			print "\n",
 
-	"""	
 	for m in range(100,150):
 		fileName = "../testfiles_sm/tf0"+str(m)
 		print fileName,
@@ -134,7 +133,6 @@ while (i < trimNum):
 		print m, "IS DONE",
 		if(m%3==0):
 			print "\n",
-	"""
 	
 	for j in selWords:
 		fileList[j].close()

@@ -3,7 +3,7 @@ from read_word import *
 
 import random
 
-#from xmeans import *
+from xmeans import *
 
 np.set_printoptions(precision=2)															#Pretty print
 np.set_printoptions(suppress=True)
@@ -15,9 +15,9 @@ fileName = "wordcontexts50d_1000(11-69)/" + word + ".cont"
 data = GetContexts(fileName, dim)
 print len(data)
 PlotTSNE(data[:5000], [])
+"""
 #ClusterPlot(data, 3)
 
-"""
 #cluster("hit",2,300)
 
 #wordVec, wordID, numIDS, dim = GetWordVec("../googvecs")
@@ -25,8 +25,9 @@ wordVec, wordID, numIDS, dim = GetWordVec("../huang50rep")
 stopWords = GetWordFile("../stopwords", [])					#Takes two arguments, the second one is list of excluded words
 print "GETTING STOPWORDS COMPLETE"														#Getting list of stopwords	
 
-wordFreq = GetWordFile("../vocab.txt", stopWords)					#Getting words in order of word frequency
 
+wordFreq = GetWordFile("../vocab.txt", stopWords)					#Getting words in order of word frequency
+"""
 wordDist = GetFreqFile("../wordfreq.txt")							#Get the frequencies of a word
 maxSize = 5000000
 noisyWords = GetNoisyList (wordDist, maxSize)
@@ -49,7 +50,7 @@ tfidf = {}
 validWords = set(wordID)&set(wordFreq)								#Create set of valid words
 
 multiList = []
-trimNum = 2500																		#Get the number of words to consider
+trimNum = 3000																		#Get the number of words to consider
 																					#Create the trimmed list of words
 for i in range(0,trimNum):
 	if (wordFreq[i] in validWords):
@@ -61,13 +62,13 @@ for w in multiList:
 	data.append(wordVec[wordID[w]])
 
 PlotTSNE(data, multiList)
-"""
+
 
 """
 import matplotlib.pyplot as plt
 
-x = np.array([np.random.normal(loc, 0.1, 20) for loc in np.repeat([1,2], 2)]).flatten()
-y = np.array([np.random.normal(loc, 0.1, 20) for loc in np.tile([1,2], 2)]).flatten()
+x = np.array([np.random.normal(loc, 0.1, 100000) for loc in np.repeat([1,2], 2)]).flatten()
+y = np.array([np.random.normal(loc, 0.1, 100000) for loc in np.tile([1,2], 2)]).flatten()
 
 x_means = XMeans(random_state = 1).fit(np.c_[x,y]) 
 print(x_means.labels_)
